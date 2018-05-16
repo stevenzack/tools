@@ -50,7 +50,7 @@ func NewToken() string {
 	token := fmt.Sprintf("%x", h.Sum(nil))
 	return token
 }
-func getTimeStrNow() string {
+func GetTimeStrNow() string {
 	return time.Now().Format("2006-01-01 15:03:02")
 }
 func NewNumToken() string {
