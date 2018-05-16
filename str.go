@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"math/rand"
 	"regexp"
 	"strconv"
 	"time"
@@ -51,4 +52,8 @@ func NewToken() string {
 }
 func getTimeStrNow() string {
 	return time.Now().Format("2006-01-01 15:03:02")
+}
+func NewNumToken() string {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return strconv.FormatInt(int64(r.Intn(60000)), 10)
 }
