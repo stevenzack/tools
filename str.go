@@ -44,7 +44,7 @@ func IsEnglish(r rune) bool {
 	return false
 }
 func NewToken() string {
-	ct := time.Now().Unix()
+	ct := time.Now().UnixNano()
 	h := md5.New()
 	io.WriteString(h, strconv.FormatInt(ct, 10))
 	token := fmt.Sprintf("%x", h.Sum(nil))
