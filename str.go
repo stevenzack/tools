@@ -1,13 +1,19 @@
 package tools
 
 import (
+	"bytes"
 	"crypto/md5"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"regexp"
+	"runtime"
 	"strconv"
 	"time"
+
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 func SplitHans(s string) string {
@@ -56,4 +62,11 @@ func GetTimeStrNow() string {
 func NewNumToken() string {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return strconv.FormatInt(int64(r.Intn(60000)), 10)
+}
+func EncodingGBK(src string) string {
+	if runtime.GOOS != "windows" {
+		return src
+	}
+	data, _ := ioutil.ReadAll(transform.NewReader(bytes.NewReader([]byte(src)), simplifiedchinese.GBK.NewEncoder()))
+	return string(data)
 }
