@@ -1,9 +1,12 @@
 package tools
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
+	"path/filepath"
 )
 
 func ReadAll(r io.Reader) string {
@@ -31,4 +34,17 @@ func GetAllFilesFromFolder(path string) []string {
 		}
 	}
 	return files
+}
+func GetCurrentExecPath() string {
+	f, e := exec.LookPath(os.Args[0])
+	if e != nil {
+		fmt.Println("exec.LookPath() failed:", e)
+		return ""
+	}
+	realPath, e := filepath.Abs(f)
+	if e != nil {
+		fmt.Println("filepath.Abs(f) failed", e)
+		return ""
+	}
+	return realPath
 }
