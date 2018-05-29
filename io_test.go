@@ -5,5 +5,5 @@ import (
 )
 
 func Test_getCurrentExecPath(t *testing.T) {
-	t.Log(getCurrentExecPath())
+	t.Log(GetDirOfFile("/home/asd/a.txt"))
 }

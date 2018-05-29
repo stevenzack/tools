@@ -48,3 +48,20 @@ func GetCurrentExecPath() string {
 	}
 	return realPath
 }
+func WriteFile(f string) (*os.File, error) {
+	e := os.MkdirAll(GetDirOfFile(f), 0755)
+	if e != nil {
+		fmt.Println(e)
+		return nil, e
+	}
+	file, e := os.OpenFile(f, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	return file, e
+}
+func GetDirOfFile(f string) string {
+	for i := len(f) - 1; i > -1; i-- {
+		if f[i:i+1] == string(os.PathSeparator) {
+			return f[:i]
+		}
+	}
+	return f
+}
