@@ -7,6 +7,8 @@ import (
 	"io"
 	"io/ioutil"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -72,4 +74,16 @@ func EncodingGBK(src string) string {
 }
 func GetOS() string {
 	return runtime.GOOS
+}
+func HandleTmpDir(pkgDir string) {
+	path, _ := filepath.Abs(pkgDir)
+	if GetOS() == "android" {
+		e := os.MkdirAll(path+"/tmp", 0755)
+		if e != nil {
+			fmt.Println("mkdirAll() failed:", e)
+			return
+		} else {
+			os.Setenv("TMPDIR", path+"/tmp/")
+		}
+	}
 }
