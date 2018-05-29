@@ -65,3 +65,7 @@ func GetDirOfFile(f string) string {
 	}
 	return f
 }
+func FileExists(f string) bool {
+	_, e := os.Stat(f)
+	return e == nil
+}
