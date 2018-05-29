@@ -87,3 +87,7 @@ func HandleTmpDir(pkgDir string) {
 		}
 	}
 }
+func Getrpath(path string) string {
+	p, _ := filepath.Abs(path)
+	return p + string(os.PathSeparator)
+}
