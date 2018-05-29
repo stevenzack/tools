@@ -70,3 +70,6 @@ func EncodingGBK(src string) string {
 	data, _ := ioutil.ReadAll(transform.NewReader(bytes.NewReader([]byte(src)), simplifiedchinese.GBK.NewEncoder()))
 	return string(data)
 }
+func GetOS() string {
+	return runtime.GOOS
+}
