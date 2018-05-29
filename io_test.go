@@ -5,5 +5,5 @@ import (
 )
 
 func Test_getCurrentExecPath(t *testing.T) {
-	t.Log(GetDirOfFile("/home/asd/a.txt"))
+	t.Log(DownloadFileToDir("https://unpkg.com/vue", "/home/asd/"))
 }

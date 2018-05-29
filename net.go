@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func DoPostMultipart(url string, m map[string]interface{}) (string, error) {
@@ -177,4 +178,54 @@ func DoGet(url string) (string, error) {
 		return "", e
 	}
 	return string(b), nil
+}
+func DownloadFile(url, fdist string) error {
+	rp, e := http.Get(url)
+	if e != nil {
+		return e
+	}
+	defer rp.Body.Close()
+	f, e := WriteFile(fdist)
+	if e != nil {
+		return e
+	}
+	defer f.Close()
+	_, e = io.Copy(f, rp.Body)
+	return e
+}
+func DownloadFileToDir(url, dir string) (string, error) {
+	rp, e := http.Get(url)
+	if e != nil {
+		return "", e
+	}
+	defer rp.Body.Close()
+	filename := getDispFileName(rp.Request.URL.EscapedPath(), rp.Header.Get("Content-Disposition"))
+	f, e := WriteFile(Getrpath(dir) + filename)
+	if e != nil {
+		return "", e
+	}
+	defer f.Close()
+	_, e = io.Copy(f, rp.Body)
+	return filename, e
+}
+func getDispFileName(url, str string) string {
+	strs := strings.Split(str, ";")
+	if len(strs) < 2 {
+		return GetFileNameFromEscURL(url)
+	}
+	for _, v := range strs {
+		mindex := strings.Index(v, "filename=")
+		if mindex > -1 {
+			return strings.Trim(v[mindex+len("filename="):], " ")
+		}
+	}
+	return GetFileNameFromEscURL(url)
+}
+func GetFileNameFromEscURL(url string) string {
+	for i := len(url) - 1; i > -1; i-- {
+		if url[i:i+1] == "/" {
+			return url[i+1:]
+		}
+	}
+	return url
 }
