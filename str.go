@@ -59,7 +59,7 @@ func NewToken() string {
 	return token
 }
 func GetTimeStrNow() string {
-	return time.Now().Format("2006-01-01 15:03:02")
+	return time.Now().Format("2006-01-02 15:04:05")
 }
 func NewNumToken() string {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
