@@ -95,3 +95,21 @@ func Getunpath(path string) string {
 	p, _ := filepath.Abs(path)
 	return p
 }
+func EndsWith(s, suffix string) bool {
+	if len(suffix) > len(s) {
+		return false
+	}
+	if s[len(s)-len(suffix):] == suffix {
+		return true
+	}
+	return false
+}
+func StartsWith(s, preffix string) bool {
+	if len(preffix) > len(s) {
+		return false
+	}
+	if s[:len(s)-len(preffix)] == preffix {
+		return true
+	}
+	return false
+}
