@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"os/user"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -112,4 +113,13 @@ func StartsWith(s, preffix string) bool {
 		return true
 	}
 	return false
+}
+func GetUserHomeDir() string {
+	c, e := user.Current()
+	if e != nil {
+		fmt.Println(e)
+		d, _ := os.Getwd()
+		return d
+	}
+	return c.HomeDir
 }
