@@ -5,5 +5,5 @@ import (
 )
 
 func Test_getCurrentExecPath(t *testing.T) {
-	t.Log("asd.js.a")
+	t.Log(RandomPort())
 }

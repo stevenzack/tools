@@ -59,6 +59,13 @@ func NewToken() string {
 	token := fmt.Sprintf("%x", h.Sum(nil))
 	return token
 }
+func MD5from(s string) string {
+	h := md5.New()
+	io.WriteString(h, s)
+	token := fmt.Sprintf("%x", h.Sum(nil))
+	return token
+}
+
 func GetTimeStrNow() string {
 	return time.Now().Format("2006-01-02 15:04:05")
 }
@@ -122,4 +129,8 @@ func GetUserHomeDir() string {
 		return d
 	}
 	return c.HomeDir
+}
+func RandomPort() string {
+	p := rand.Intn(40000) + 10000
+	return strconv.Itoa(p)
 }
