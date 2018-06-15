@@ -1,4 +1,4 @@
-package tools
+package strToolkit
 
 import (
 	"encoding/json"

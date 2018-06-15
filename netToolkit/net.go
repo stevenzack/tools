@@ -1,8 +1,10 @@
-package tools
+package netToolkit
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/StevenZack/tools/fileToolkit"
+	"github.com/StevenZack/tools/strToolkit"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -185,7 +187,7 @@ func DownloadFile(url, fdist string) error {
 		return e
 	}
 	defer rp.Body.Close()
-	f, e := WriteFile(fdist)
+	f, e := fileToolkit.WriteFile(fdist)
 	if e != nil {
 		return e
 	}
@@ -200,7 +202,7 @@ func DownloadFileToDir(url, dir string) (string, error) {
 	}
 	defer rp.Body.Close()
 	filename := getDispFileName(rp.Request.URL.EscapedPath(), rp.Header.Get("Content-Disposition"))
-	f, e := WriteFile(Getrpath(dir) + filename)
+	f, e := fileToolkit.WriteFile(strToolkit.Getrpath(dir) + filename)
 	if e != nil {
 		return "", e
 	}

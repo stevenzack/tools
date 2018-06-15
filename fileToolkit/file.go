@@ -1,4 +1,4 @@
-package toolfile
+package fileToolkit
 
 import (
 	"fmt"

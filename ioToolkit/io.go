@@ -1,4 +1,4 @@
-package toolio
+package ioToolkit
 
 import (
 	"io"
