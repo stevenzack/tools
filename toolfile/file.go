@@ -1,21 +1,13 @@
-package tools
+package toolfile
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 )
 
-func ReadAll(r io.Reader) string {
-	b, e := ioutil.ReadAll(r)
-	if e != nil {
-		return ""
-	}
-	return string(b)
-}
 func GetAllFilesFromFolder(path string) []string {
 	rpath := path
 	if len(path) > 0 && path[len(path)-1:] != string(os.PathSeparator) {
