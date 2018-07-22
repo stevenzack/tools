@@ -3,8 +3,10 @@ package fileToolkit
 import (
 	"fmt"
 	"io/ioutil"
+	"mime"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 )
 
@@ -60,4 +62,11 @@ func GetDirOfFile(f string) string {
 func FileExists(f string) bool {
 	_, e := os.Stat(f)
 	return e == nil
+}
+func GetFileExt(f string) string {
+	return path.Ext(f)
+}
+func GetFileMimeType(f string) string {
+	t := mime.TypeByExtension(GetFileExt(f))
+	return t
 }
