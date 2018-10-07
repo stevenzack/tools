@@ -6,6 +6,7 @@ import (
 	"mime"
 	"os"
 	"os/exec"
+	"os/user"
 	"path"
 	"path/filepath"
 )
@@ -69,4 +70,8 @@ func GetFileExt(f string) string {
 func GetFileMimeType(f string) string {
 	t := mime.TypeByExtension(GetFileExt(f))
 	return t
+}
+func GetHomeDir() (string, error) {
+	u, e := user.Current()
+	return u.HomeDir, e
 }
