@@ -71,7 +71,10 @@ func GetFileMimeType(f string) string {
 	t := mime.TypeByExtension(GetFileExt(f))
 	return t
 }
-func GetHomeDir() (string, error) {
+func GetHomeDir() string {
 	u, e := user.Current()
-	return u.HomeDir, e
+	if e != nil {
+		return GetCurrentExecPath()
+	}
+	return u.HomeDir
 }
