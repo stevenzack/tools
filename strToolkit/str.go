@@ -139,8 +139,5 @@ func JsonObject(i interface{}) string {
 	return string(b)
 }
 func UnJson(str string, v interface{}) {
-	e := json.Unmarshal([]byte(str), v)
-	if e != nil {
-		fmt.Println("UnJson() err:", e)
-	}
+	json.Unmarshal([]byte(str), v)
 }
