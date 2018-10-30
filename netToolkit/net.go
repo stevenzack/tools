@@ -2,6 +2,7 @@ package netToolkit
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/StevenZack/tools/fileToolkit"
 	"github.com/StevenZack/tools/strToolkit"
@@ -50,6 +51,21 @@ func DoPostMultipart(url string, m map[string]interface{}) (string, error) {
 	b, e := ioutil.ReadAll(rp.Body)
 	return string(b), e
 }
+func DoPostJson(url string, i interface{}) ([]byte, error) {
+	b, e := json.Marshal(i)
+	if e != nil {
+		return nil, e
+	}
+	r := bytes.NewReader(b)
+	rp, e := http.Post(url, "application/json", r)
+	if e != nil {
+		return nil, e
+	}
+	defer rp.Body.Close()
+	s, e := ioutil.ReadAll(rp.Body)
+	return s, e
+}
+
 func GetIP() string {
 	ifaces, err := net.Interfaces()
 	if err != nil {

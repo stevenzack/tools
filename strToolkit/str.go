@@ -2,6 +2,7 @@ package strToolkit
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math/rand"
@@ -122,4 +123,24 @@ func GetUserHomeDir() string {
 func RandomPort() string {
 	p := rand.Intn(40000) + 10000
 	return strconv.Itoa(p)
+}
+func JsonArray(i interface{}) string {
+	b, e := json.Marshal(i)
+	if e != nil {
+		return "[]"
+	}
+	return string(b)
+}
+func JsonObject(i interface{}) string {
+	b, e := json.Marshal(i)
+	if e != nil {
+		return "{}"
+	}
+	return string(b)
+}
+func UnJson(str string, v interface{}) {
+	e := json.Unmarshal([]byte(str), v)
+	if e != nil {
+		fmt.Println("UnJson() err:", e)
+	}
 }
