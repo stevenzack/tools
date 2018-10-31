@@ -63,7 +63,7 @@ func DoPostJson(url string, i interface{}) ([]byte, error) {
 	}
 	rp, e := client.Post(url, "application/json", r)
 	if e != nil {
-		if strings.Contains(e.Error(), "connection refused") {
+		if strings.Contains(e.Error(), "refuse") {
 			return nil, fmt.Errorf("服务器连接失败")
 		}
 		if strings.Contains(e.Error(), "network is unreachable") {
