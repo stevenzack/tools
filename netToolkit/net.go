@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 func DoPostMultipart(url string, m map[string]interface{}) (string, error) {
@@ -57,7 +58,10 @@ func DoPostJson(url string, i interface{}) ([]byte, error) {
 		return nil, e
 	}
 	r := bytes.NewReader(b)
-	rp, e := http.Post(url, "application/json", r)
+	client := http.Client{
+		Timeout: time.Second * 5,
+	}
+	rp, e := client.Post(url, "application/json", r)
 	if e != nil {
 		return nil, e
 	}
@@ -186,7 +190,10 @@ func IsMyIP(str string) bool {
 	return false
 }
 func DoGet(url string) (string, error) {
-	rp, e := http.Get(url)
+	client := http.Client{
+		Timeout: time.Second * 5,
+	}
+	rp, e := client.Get(url)
 	if e != nil {
 		return "", e
 	}
@@ -246,4 +253,34 @@ func GetFileNameFromEscURL(url string) string {
 		}
 	}
 	return url
+}
+
+func GetIPs() []string {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	var strs []string
+	for _, i := range ifaces {
+		addrs, err := i.Addrs()
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		for _, addr := range addrs {
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip := v.IP
+				if ip.String() == "::1" || strings.Contains(ip.String(), "::") {
+					continue
+				}
+				strs = append(strs, ip.String())
+			case *net.IPAddr:
+				// ip := v.IP
+				// strs = append(strs, ip.String())
+			}
+		}
+	}
+	return strs
 }
