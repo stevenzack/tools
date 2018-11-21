@@ -85,6 +85,36 @@ func HandleTmpDir(pkgDir string) {
 		}
 	}
 }
+func FmtDuration(d time.Duration) string {
+	str := ""
+	y := d / (time.Hour * 24 * 365)
+	if y != 0 {
+		str += fmt.Sprintf("%d年", y)
+		d -= y * time.Hour * 24 * 365
+	}
+	m := d / (time.Hour * 24 * 30)
+	if m != 0 {
+		str += fmt.Sprintf("%d个月", m)
+		d -= m * time.Hour * 24 * 30
+	}
+	day := d / (time.Hour * 24)
+	if day != 0 {
+		str += fmt.Sprintf("%d天", day)
+		d -= day * time.Hour * 24
+	}
+	hour := d / time.Hour
+	if hour != 0 {
+		str += fmt.Sprintf("%d个小时", hour)
+		d -= hour * time.Hour
+	}
+	min := d / time.Minute
+	if min != 0 {
+		str += fmt.Sprintf("%d分钟", min)
+		d -= min * time.Minute
+	}
+	return str
+}
+
 func Getrpath(path string) string {
 	p, _ := filepath.Abs(path)
 	return p + string(os.PathSeparator)
