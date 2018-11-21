@@ -112,6 +112,13 @@ func FmtDuration(d time.Duration) string {
 		str += fmt.Sprintf("%d分钟", min)
 		d -= min * time.Minute
 	}
+	if y == 0 && m == 0 && day == 0 && hour == 0 && min == 0 {
+		second := d / time.Second
+		if second != 0 {
+			str += fmt.Sprintf("%d秒", second)
+			d -= second * time.Second
+		}
+	}
 	return str
 }
 
