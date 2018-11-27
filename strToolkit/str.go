@@ -48,6 +48,13 @@ func IsEnglish(r rune) bool {
 	}
 	return false
 }
+
+func IsDigital(r rune) bool {
+	if r<48||r>57{
+		return false
+	}
+	return true
+}
 func NewToken() string {
 	ct := time.Now().UnixNano()
 	h := md5.New()
