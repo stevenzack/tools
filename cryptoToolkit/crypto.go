@@ -50,7 +50,6 @@ func Decrypt(data []byte, passphrase string) ([]byte, error) {
 		return nil, err
 	}
 	nonceSize := gcm.NonceSize()
-	fmt.Println("noneceSize:", nonceSize)
 	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
