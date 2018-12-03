@@ -10,6 +10,7 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -36,6 +37,9 @@ func Encrypt(data []byte, passphrase string) []byte {
 	return ciphertext
 }
 func Decrypt(data []byte, passphrase string) ([]byte, error) {
+	if len(data) < 12 {
+		return nil, errors.New("data too short")
+	}
 	key := []byte(createHash(passphrase))
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -46,6 +50,7 @@ func Decrypt(data []byte, passphrase string) ([]byte, error) {
 		return nil, err
 	}
 	nonceSize := gcm.NonceSize()
+	fmt.Println("noneceSize:", nonceSize)
 	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
