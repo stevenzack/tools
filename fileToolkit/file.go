@@ -53,6 +53,12 @@ func WriteFile(f string) (*os.File, error) {
 	return file, e
 }
 func GetDirOfFile(f string) string {
+	info,e:=os.Stat(f)
+	if e==nil {
+		if info.IsDir(){
+			return f
+		}
+	}
 	for i := len(f) - 1; i > -1; i-- {
 		if f[i:i+1] == string(os.PathSeparator) {
 			return f[:i]
