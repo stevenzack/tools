@@ -150,7 +150,7 @@ func StartsWith(s, preffix string) bool {
 	if len(preffix) > len(s) {
 		return false
 	}
-	if s[:len(s)-len(preffix)] == preffix {
+	if s[:len(preffix)] == preffix {
 		return true
 	}
 	return false

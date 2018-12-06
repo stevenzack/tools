@@ -53,9 +53,9 @@ func WriteFile(f string) (*os.File, error) {
 	return file, e
 }
 func GetDirOfFile(f string) string {
-	info,e:=os.Stat(f)
-	if e==nil {
-		if info.IsDir(){
+	info, e := os.Stat(f)
+	if e == nil {
+		if info.IsDir() {
 			return f
 		}
 	}
@@ -83,4 +83,10 @@ func GetHomeDir() string {
 		return GetCurrentExecPath()
 	}
 	return u.HomeDir
+}
+func Getrpath(path string) string {
+	if path[len(path)-1:] != string(os.PathSeparator) {
+		return path + string(os.PathSeparator)
+	}
+	return path
 }
