@@ -1,6 +1,7 @@
 package encodingToolkit
 
 import (
+	"net/url"
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
@@ -30,4 +31,10 @@ func JsonArray(i interface{}) string {
 		return "[]"
 	}
 	return string(b)
+}
+func UrlEncode(s string)string{
+	return url.QueryEscape(s)
+}
+func UrlDecode(s string)(string,error){
+	return url.QueryUnescape(s)
 }

@@ -73,7 +73,7 @@ func compressWithName(file *os.File, prefix string, zw *zip.Writer, callback fun
 	return nil
 }
 func Compress(files []*os.File, dest string) error {
-	d, e := os.Create(dest)
+	d, e := os.OpenFile(dest, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if e != nil {
 		return e
 	}
