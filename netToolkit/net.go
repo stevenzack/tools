@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/StevenZack/tools/fileToolkit"
-	"github.com/StevenZack/tools/strToolkit"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -14,6 +12,9 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/StevenZack/tools/fileToolkit"
+	"github.com/StevenZack/tools/strToolkit"
 )
 
 func DoPostMultipart(url string, m map[string]interface{}) (string, error) {
@@ -278,7 +279,7 @@ func GetIPs() []string {
 			switch v := addr.(type) {
 			case *net.IPNet:
 				ip := v.IP
-				if ip.String() == "::1" || strings.Contains(ip.String(), "::") {
+				if ip.String() == "::1" || strings.Contains(ip.String(), ":") {
 					continue
 				}
 				strs = append(strs, ip.String())
