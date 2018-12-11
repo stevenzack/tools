@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -50,7 +51,7 @@ func IsEnglish(r rune) bool {
 }
 
 func IsDigital(r rune) bool {
-	if r<48||r>57{
+	if r < 48 || r > 57 {
 		return false
 	}
 	return true
@@ -184,4 +185,36 @@ func JsonObject(i interface{}) string {
 }
 func UnJson(str string, v interface{}) {
 	json.Unmarshal([]byte(str), v)
+}
+
+func CompareVersionLeftHigher(s1, s2 string) (bool, error) {
+	is1, e := versionToIntegers(s1)
+	if e != nil {
+		return false, e
+	}
+	is2, e := versionToIntegers(s2)
+	if e != nil {
+		return false, e
+	}
+	for i := 0; i < len(is1) && i < len(is2); i++ {
+		if is1[i] > is2[i] {
+			return true, nil
+		}
+		if is1[i] < is2[i] {
+			return false, nil
+		}
+	}
+	return false, nil
+}
+func versionToIntegers(s string) ([]int, error) {
+	ss := strings.Split(s, ".")
+	var is []int
+	for _, v := range ss {
+		i, e := strconv.ParseUint(v, 10, 64)
+		if e != nil {
+			return nil, e
+		}
+		is = append(is, int(i))
+	}
+	return is, nil
 }
