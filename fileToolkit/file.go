@@ -9,8 +9,10 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
+// recursively
 func GetAllFilesFromFolder(path string) []string {
 	rpath := path
 	if len(path) > 0 && path[len(path)-1:] != string(os.PathSeparator) {
@@ -89,4 +91,48 @@ func Getrpath(path string) string {
 		return path + string(os.PathSeparator)
 	}
 	return path
+}
+
+func GetIconURLByFileType(fpath string) string {
+	f, e := os.Open(fpath)
+	if e != nil {
+		fmt.Println(`os.open error :`, e)
+		return ""
+	}
+	server := "https://jywjl.github.io/images/icons/"
+	info, e := f.Stat()
+	if e != nil {
+		return server + "file.png"
+	}
+	if info.IsDir() {
+		return server + "folder.png"
+	}
+	nameS := strings.Split(f.Name(), ".")
+	ext := nameS[len(nameS)-1]
+	mimeTypes := strings.Split(mime.TypeByExtension("."+ext), "/")
+	switch mimeTypes[0] {
+	case "audio":
+		return server + "audio.png"
+	case "image":
+		return "file://" + fpath
+	case "video":
+		return server + "video.png"
+	default:
+		return server + "file.png"
+	}
+}
+func FormatFileSize(size int64) string {
+	gb := size / 1024 / 1024 / 1024
+	if gb != 0 {
+		return fmt.Sprint(gb) + "G"
+	}
+	mb := size / 1024 / 1024
+	if mb != 0 {
+		return fmt.Sprint(mb) + "M"
+	}
+	kb := size / 1024
+	if kb != 0 {
+		return fmt.Sprint(kb) + "K"
+	}
+	return fmt.Sprint(size) + "B"
 }
