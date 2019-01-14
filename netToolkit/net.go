@@ -30,12 +30,31 @@ func DoPostMultipart(url string, m map[string]interface{}) (string, error) {
 			continue
 		}
 		if vv, ok := v.(*os.File); ok {
-			fo, e := w.CreateFormFile(k, vv.Name())
+			st, e := vv.Stat()
+			if e != nil {
+				continue
+			}
+			fo, e := w.CreateFormFile(k, st.Name())
 			if e != nil {
 				continue
 			}
 			io.Copy(fo, vv)
 			vv.Close()
+			continue
+		}
+		if vv, ok := v.([]*os.File); ok {
+			for _, vvv := range vv {
+				st, e := vvv.Stat()
+				if e != nil {
+					continue
+				}
+				fo, e := w.CreateFormFile(k, st.Name())
+				if e != nil {
+					continue
+				}
+				io.Copy(fo, vvv)
+				vvv.Close()
+			}
 			continue
 		}
 	}
@@ -44,6 +63,7 @@ func DoPostMultipart(url string, m map[string]interface{}) (string, error) {
 	if e != nil {
 		return "", e
 	}
+	r.Header.Set("Content-Type", "multipart/form-data; boundary="+w.Boundary())
 	var client http.Client
 	rp, e := client.Do(r)
 	if e != nil {
