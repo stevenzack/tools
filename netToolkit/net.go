@@ -17,7 +17,7 @@ import (
 	"github.com/StevenZack/tools/strToolkit"
 )
 
-func DoPostMultipart(url string, m map[string]interface{}) (string, error) {
+func DoPostMultipartWithHeaders(url string, m map[string]interface{}, headers map[string]string) (string, error) {
 	buf := new(bytes.Buffer)
 	w := multipart.NewWriter(buf)
 	for k, v := range m {
@@ -64,6 +64,11 @@ func DoPostMultipart(url string, m map[string]interface{}) (string, error) {
 		return "", e
 	}
 	r.Header.Set("Content-Type", "multipart/form-data; boundary="+w.Boundary())
+	if headers != nil {
+		for k, v := range headers {
+			r.Header.Set(k, v)
+		}
+	}
 	var client http.Client
 	rp, e := client.Do(r)
 	if e != nil {
@@ -72,6 +77,9 @@ func DoPostMultipart(url string, m map[string]interface{}) (string, error) {
 	defer rp.Body.Close()
 	b, e := ioutil.ReadAll(rp.Body)
 	return string(b), e
+}
+func DoPostMultipart(url string, m map[string]interface{}) (string, error) {
+	return DoPostMultipartWithHeaders(url, m, nil)
 }
 func DoPostJson(url string, i interface{}) ([]byte, error) {
 	b, e := json.Marshal(i)
