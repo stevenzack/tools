@@ -136,15 +136,16 @@ func DeCompress(zipFile, dest string) error {
 	}
 	defer reader.Close()
 	for _, file := range reader.File {
+		filename := fileToolkit.Getrpath(dest) + file.Name
 		rc, err := file.Open()
 		if err != nil {
 			return err
 		}
 		defer rc.Close()
-		if file.FileInfo().IsDir(){
+		if file.FileInfo().IsDir() {
+			os.MkdirAll(filename, 0755)
 			continue
 		}
-		filename := fileToolkit.Getrpath(dest) + file.Name
 		err = os.MkdirAll(getDir(filename), 0755)
 		if err != nil {
 			return err
