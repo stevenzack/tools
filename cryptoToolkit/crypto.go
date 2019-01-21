@@ -36,6 +36,13 @@ func Encrypt(data []byte, passphrase string) []byte {
 	ciphertext := gcm.Seal(nonce, nonce, data, nil)
 	return ciphertext
 }
+func EncryptStr(data string, passphrase string) []byte {
+	return Encrypt([]byte(data), passphrase)
+}
+func DecryptStr(data string, passphrase string) (string, error) {
+	de, e := Decrypt([]byte(data), passphrase)
+	return string(de), e
+}
 func Decrypt(data []byte, passphrase string) ([]byte, error) {
 	if len(data) < 12 {
 		return nil, errors.New("data too short")
