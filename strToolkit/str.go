@@ -170,6 +170,9 @@ func RandomPort() string {
 	return strconv.Itoa(p)
 }
 func JsonArray(i interface{}) string {
+	if i == nil {
+		return "[]"
+	}
 	b, e := json.Marshal(i)
 	if e != nil {
 		return "[]"
@@ -177,6 +180,9 @@ func JsonArray(i interface{}) string {
 	return string(b)
 }
 func JsonObject(i interface{}) string {
+	if i == nil {
+		return "{}"
+	}
 	b, e := json.Marshal(i)
 	if e != nil {
 		return "{}"
