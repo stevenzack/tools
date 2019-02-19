@@ -10,7 +10,35 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/StevenZack/tools/strToolkit"
 )
+
+func GetExt(p string) string {
+	return path.Ext(p)
+}
+func GetMimeType(f string) string {
+	info, e := os.Stat(f)
+	if e != nil {
+		fmt.Println(e)
+		return e.Error()
+	}
+	if info.IsDir() {
+		return "dir"
+	}
+	switch strings.ToLower(GetExt(info.Name())) {
+	case ".mp4", ".webm", ".mkv", ".3gp", ".flv", ".avi", ".mov", ".rmvb", ".wmv", ".m4v":
+		return "video"
+	case ".mp3", ".wav", ".amr", ".aac", ".wma", ".midi", ".flac":
+		return "audio"
+	case ".jpg", ".jpeg", ".webp", ".png", ".gif", ".apng", ".bmp", ".tif", ".svg", ".cdr":
+		return "image"
+	case ".txt", ".md", ".html", ".css", ".js", ".go", ".java", ".py", ".sh":
+		return "text"
+	default:
+		return "file"
+	}
+}
 
 // recursively
 func GetAllFilesFromFolder(path string) []string {
@@ -61,6 +89,7 @@ func GetDirOfFile(f string) string {
 			return f
 		}
 	}
+	f = strToolkit.Getunpath(f)
 	for i := len(f) - 1; i > -1; i-- {
 		if f[i:i+1] == string(os.PathSeparator) {
 			return f[:i]
