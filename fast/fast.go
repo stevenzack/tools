@@ -5,3 +5,6 @@ import "github.com/valyala/fasthttp"
 func GetHeader(cx *fasthttp.RequestCtx, s string) string {
 	return string(cx.Request.Header.Peek(s))
 }
+func GetURI(cx *fasthttp.RequestCtx) string {
+	return string(cx.URI().Path())
+}
