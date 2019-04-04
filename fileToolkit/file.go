@@ -165,3 +165,17 @@ func FormatFileSize(size int64) string {
 	}
 	return fmt.Sprint(size) + "B"
 }
+func IsFile(path string) (bool, error) {
+	info, e := os.Stat(path)
+	if e != nil {
+		return false, e
+	}
+	return !info.IsDir(), nil
+}
+func IsDir(dir string) (bool, error) {
+	info, e := os.Stat(dir)
+	if e != nil {
+		return false, e
+	}
+	return info.IsDir(), nil
+}
