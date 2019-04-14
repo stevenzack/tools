@@ -98,9 +98,15 @@ func GetDirOfFile(f string) string {
 	}
 	return f
 }
-func FileExists(f string) bool {
-	_, e := os.Stat(f)
-	return e == nil
+func IsFileExists(f string) bool {
+	info, e := os.Stat(f)
+	if e != nil {
+		return false
+	}
+	if info.IsDir() {
+		return false
+	}
+	return true
 }
 func GetFileExt(f string) string {
 	return path.Ext(f)
@@ -196,4 +202,22 @@ func GetCurrentPkgPath() (string, error) {
 	}
 	pkgPath := wd[len(srcPath):]
 	return pkgPath, nil
+}
+
+func IsDirExists(dir string) bool {
+	info, e := os.Stat(dir)
+	if e != nil {
+		return false
+	}
+	if !info.IsDir() {
+		return false
+	}
+	return true
+}
+func IsPathExists(path string) bool {
+	_, e := os.Stat(path)
+	if e != nil {
+		return false
+	}
+	return true
 }
