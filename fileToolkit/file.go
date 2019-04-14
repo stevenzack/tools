@@ -43,7 +43,7 @@ func GetMimeType(f string) string {
 }
 
 // recursively
-func GetAllFilesFromFolder(path string) []string {
+func RangeAllFilesInDirRecursively(path string) []string {
 	path = strToolkit.Getrpath(path)
 	dir, e := ioutil.ReadDir(path)
 	if e != nil {
@@ -52,13 +52,29 @@ func GetAllFilesFromFolder(path string) []string {
 	files := []string{}
 	for _, fi := range dir {
 		if fi.IsDir() {
-			files = append(files, GetAllFilesFromFolder(path+fi.Name())...)
+			files = append(files, RangeAllFilesInDirRecursively(path+fi.Name())...)
 		} else {
 			files = append(files, path+fi.Name())
 		}
 	}
 	return files
 }
+
+func RangeFilesInDir(dir string) ([]string, error) {
+	dir = strToolkit.Getrpath(dir)
+	infos, e := ioutil.ReadDir(dir)
+	if e != nil {
+		return nil, e
+	}
+	fs := []string{}
+	for _, info := range infos {
+		if !info.IsDir() {
+			fs = append(fs, dir+info.Name())
+		}
+	}
+	return fs, nil
+}
+
 func GetCurrentExecPath() string {
 	f, e := exec.LookPath(os.Args[0])
 	if e != nil {
