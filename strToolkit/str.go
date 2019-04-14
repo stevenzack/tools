@@ -131,13 +131,35 @@ func FmtDuration(d time.Duration) string {
 }
 
 func Getrpath(path string) string {
-	p, _ := filepath.Abs(path)
-	return p + string(os.PathSeparator)
+	if len(path) == 0 {
+		return ""
+	}
+	sep := string(os.PathSeparator)
+	if GetLast(path) == sep {
+		return path
+	}
+	return path + sep
 }
+
+func GetLast(s string) string {
+	if len(s) == 0 {
+		return ""
+	}
+	index := len(s) - 1
+	return s[index:]
+}
+
 func Getunpath(path string) string {
-	p, _ := filepath.Abs(path)
-	return p
+	if len(path) == 0 {
+		return ""
+	}
+	sep := string(os.PathSeparator)
+	if GetLast(path) != sep {
+		return path
+	}
+	return path[:len(path)-1]
 }
+
 func EndsWith(s, suffix string) bool {
 	if len(suffix) > len(s) {
 		return false

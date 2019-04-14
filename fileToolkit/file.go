@@ -122,12 +122,6 @@ func GetHomeDir() string {
 	}
 	return u.HomeDir
 }
-func Getrpath(path string) string {
-	if path[len(path)-1:] != string(os.PathSeparator) {
-		return path + string(os.PathSeparator)
-	}
-	return path
-}
 
 func GetIconURLByFileType(fpath string) string {
 	f, e := os.Open(fpath)
