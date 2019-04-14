@@ -87,9 +87,7 @@ func DoPostJson(url string, i interface{}) ([]byte, error) {
 		return nil, e
 	}
 	r := bytes.NewReader(b)
-	client := http.Client{
-		Timeout: time.Second * 5,
-	}
+	client := http.Client{}
 	rp, e := client.Post(url, "application/json", r)
 	if e != nil {
 		if strings.Contains(e.Error(), "refuse") {

@@ -1,6 +1,7 @@
 package fileToolkit
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"mime"
@@ -178,4 +179,21 @@ func IsDir(dir string) (bool, error) {
 		return false, e
 	}
 	return info.IsDir(), nil
+}
+
+func GetGOPATH() string {
+	return Getrpath(os.Getenv("GOPATH"))
+}
+func GetCurrentPkgPath() (string, error) {
+	wd, e := os.Getwd()
+	if e != nil {
+		return "", e
+	}
+	gopath := GetGOPATH()
+	wd = Getrpath(wd)
+	if !strings.Contains(wd, gopath) {
+		return "", errors.New("not a Go package")
+	}
+	pkgPath := wd[len(gopath):]
+	return pkgPath, nil
 }
