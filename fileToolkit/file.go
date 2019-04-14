@@ -228,3 +228,16 @@ func CopyFile(dst, src string) error {
 	_, e = io.Copy(fo, fi)
 	return e
 }
+
+func ReadFileAll(path string) (string, error) {
+	f, e := os.OpenFile(path, os.O_RDONLY, 0644)
+	if e != nil {
+		return "", e
+	}
+	defer f.Close()
+	b, e := ioutil.ReadAll(f)
+	if e != nil {
+		return "", e
+	}
+	return string(b), nil
+}
