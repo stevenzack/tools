@@ -3,6 +3,7 @@ package fileToolkit
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"mime"
 	"os"
@@ -43,10 +44,7 @@ func GetMimeType(f string) string {
 
 // recursively
 func GetAllFilesFromFolder(path string) []string {
-	rpath := path
-	if len(path) > 0 && path[len(path)-1:] != string(os.PathSeparator) {
-		rpath += string(os.PathSeparator)
-	}
+	path = strToolkit.Getrpath(path)
 	dir, e := ioutil.ReadDir(path)
 	if e != nil {
 		return nil
@@ -54,9 +52,9 @@ func GetAllFilesFromFolder(path string) []string {
 	files := []string{}
 	for _, fi := range dir {
 		if fi.IsDir() {
-			files = append(files, GetAllFilesFromFolder(rpath+fi.Name())...)
+			files = append(files, GetAllFilesFromFolder(path+fi.Name())...)
 		} else {
-			files = append(files, rpath+fi.Name())
+			files = append(files, path+fi.Name())
 		}
 	}
 	return files
@@ -182,7 +180,7 @@ func IsDir(dir string) (bool, error) {
 }
 
 func GetGOPATH() string {
-	return Getrpath(os.Getenv("GOPATH"))
+	return strToolkit.Getrpath(os.Getenv("GOPATH"))
 }
 func GetCurrentPkgPath() (string, error) {
 	wd, e := os.Getwd()
@@ -190,7 +188,7 @@ func GetCurrentPkgPath() (string, error) {
 		return "", e
 	}
 	srcPath := GetGOPATH() + "src/"
-	wd = Getrpath(wd)
+	wd = strToolkit.Getrpath(wd)
 	if !strings.Contains(wd, srcPath) {
 		return "", errors.New("not a Go package")
 	}
@@ -214,4 +212,19 @@ func IsPathExists(path string) bool {
 		return false
 	}
 	return true
+}
+
+func CopyFile(dst, src string) error {
+	fi, e := os.OpenFile(src, os.O_RDONLY, 0644)
+	if e != nil {
+		return e
+	}
+	defer fi.Close()
+	fo, e := os.OpenFile(dst, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if e != nil {
+		return e
+	}
+	defer fo.Close()
+	_, e = io.Copy(fo, fi)
+	return e
 }
