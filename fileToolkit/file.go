@@ -89,7 +89,11 @@ func GetCurrentExecPath() string {
 	return realPath
 }
 func WriteFile(f string) (*os.File, error) {
-	e := os.MkdirAll(GetDirOfFile(f), 0755)
+	dir, e := GetDirOfFile(f)
+	if e != nil {
+		return nil, e
+	}
+	e = os.MkdirAll(dir, 0755)
 	if e != nil {
 		fmt.Println(e)
 		return nil, e
@@ -97,20 +101,22 @@ func WriteFile(f string) (*os.File, error) {
 	file, e := os.OpenFile(f, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	return file, e
 }
-func GetDirOfFile(f string) string {
+func GetDirOfFile(f string) (string, error) {
 	info, e := os.Stat(f)
-	if e == nil {
-		if info.IsDir() {
-			return f
-		}
+	if e != nil {
+		return "", e
 	}
+	if info.IsDir() {
+		return "", errors.New(f + " is not file")
+	}
+
 	f = strToolkit.Getunpath(f)
 	for i := len(f) - 1; i > -1; i-- {
 		if f[i:i+1] == string(os.PathSeparator) {
-			return f[:i]
+			return f[:i], nil
 		}
 	}
-	return f
+	return f, nil
 }
 func IsFileExists(f string) bool {
 	info, e := os.Stat(f)
