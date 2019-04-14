@@ -189,11 +189,11 @@ func GetCurrentPkgPath() (string, error) {
 	if e != nil {
 		return "", e
 	}
-	gopath := GetGOPATH()
+	srcPath := GetGOPATH() + "src/"
 	wd = Getrpath(wd)
-	if !strings.Contains(wd, gopath) {
+	if !strings.Contains(wd, srcPath) {
 		return "", errors.New("not a Go package")
 	}
-	pkgPath := wd[len(gopath):]
+	pkgPath := wd[len(srcPath):]
 	return pkgPath, nil
 }
