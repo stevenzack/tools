@@ -204,6 +204,12 @@ func IsDir(dir string) (bool, error) {
 func GetGOPATH() string {
 	return strToolkit.Getrpath(os.Getenv("GOPATH"))
 }
+func GetPkgFromPath(dir string) (string, error) {
+	if !IsDirExists(dir) {
+		return "", errors.New("dir " + dir + " does not exists")
+	}
+	
+}
 func GetCurrentPkgPath() (string, error) {
 	wd, e := os.Getwd()
 	if e != nil {
