@@ -9,7 +9,7 @@ import (
 	"github.com/StevenZack/tools/strToolkit"
 )
 
-func IsGoPkg(pkgPath string) bool {
+func IsGoPathPkg(pkgPath string) bool {
 	if pkgPath == "" {
 		return false
 	}
