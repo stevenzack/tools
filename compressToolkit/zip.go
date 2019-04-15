@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/StevenZack/tools/fileToolkit"
+	"github.com/StevenZack/tools/strToolkit"
 )
 
 //压缩文件
@@ -136,7 +136,7 @@ func DeCompress(zipFile, dest string) error {
 	}
 	defer reader.Close()
 	for _, file := range reader.File {
-		filename := fileToolkit.Getrpath(dest) + file.Name
+		filename := strToolkit.Getrpath(dest) + file.Name
 		rc, err := file.Open()
 		if err != nil {
 			return err

@@ -201,29 +201,6 @@ func IsDir(dir string) (bool, error) {
 	return info.IsDir(), nil
 }
 
-func GetGOPATH() string {
-	return strToolkit.Getrpath(os.Getenv("GOPATH"))
-}
-func GetPkgFromPath(dir string) (string, error) {
-	if !IsDirExists(dir) {
-		return "", errors.New("dir " + dir + " does not exists")
-	}
-	
-}
-func GetCurrentPkgPath() (string, error) {
-	wd, e := os.Getwd()
-	if e != nil {
-		return "", e
-	}
-	srcPath := GetGOPATH() + "src/"
-	wd = strToolkit.Getrpath(wd)
-	if !strings.Contains(wd, srcPath) {
-		return "", errors.New("not a Go package")
-	}
-	pkgPath := wd[len(srcPath):]
-	return pkgPath, nil
-}
-
 func IsDirExists(dir string) bool {
 	info, e := os.Stat(dir)
 	if e != nil {
@@ -268,4 +245,12 @@ func ReadFileAll(path string) (string, error) {
 		return "", e
 	}
 	return string(b), nil
+}
+
+func GetNameOfPath(path string) (string, error) {
+	info, e := os.Stat(path)
+	if e != nil {
+		return "", e
+	}
+	return info.Name(), nil
 }
