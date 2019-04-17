@@ -246,3 +246,16 @@ func versionToIntegers(s string) ([]int, error) {
 	}
 	return is, nil
 }
+
+func GetDirOfFile(path string) string {
+	if path == "" {
+		return path
+	}
+	sep := string(os.PathSeparator)
+	for i := len(path) - 1; i > -1; i-- {
+		if path[i:i+1] == sep {
+			return path[:i+1]
+		}
+	}
+	return path
+}

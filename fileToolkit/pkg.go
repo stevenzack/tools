@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/StevenZack/tools/strToolkit"
@@ -100,4 +101,25 @@ func GetCurrentPkgPath() (string, error) {
 	}
 	pkgPath := wd[len(srcPath):]
 	return pkgPath, nil
+}
+
+func MkdirsOfFilePath(fpath string) string {
+	dir := strToolkit.GetDirOfFile(fpath)
+	os.MkdirAll(dir, 0755)
+	return dir
+}
+
+// ParseGoPkg formats path like : ./model , ../me_gengo , /home/asd/go/src/base... into Go Package like github.com/StevenZack/gengo
+func ParseGoPkg(curDir, pkg string) string {
+	sep := string(os.PathSeparator)
+	if strings.Contains(pkg, sep) {
+		if strings.HasPrefix(pkg, "."+sep) || strings.HasPrefix(pkg, ".."+sep) {
+			return strToolkit.Getrpath(curDir) + pkg
+		}
+		if strings.HasPrefix(pkg, sep) || runtime.GOOS == "windows" && strings.Contains(pkg, ":"+sep) {
+			return pkg
+		}
+		return GetGOPATH() + pkg
+	}
+	return strToolkit.Getrpath(curDir) + pkg
 }
