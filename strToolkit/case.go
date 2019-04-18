@@ -23,7 +23,11 @@ func ToSnakeCase(s string) string {
 		}
 
 		if IsUpperCase(r) && index != 0 {
-			out = append(out, '_', ToLowerCase(r))
+			if IsLowerCase(rune(s[index-1])) {
+				out = append(out, '_', ToLowerCase(r))
+				continue
+			}
+			out = append(out, ToLowerCase(r))
 			continue
 		}
 		out = append(out, r)
@@ -32,6 +36,7 @@ func ToSnakeCase(s string) string {
 }
 
 func ToCamelCase(s string) string {
+	s = ToLower(s)
 	out := []rune{}
 	for index, r := range s {
 		if r == '_' {
