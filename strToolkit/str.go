@@ -6,14 +6,9 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-	"os"
-	"os/user"
-	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func SplitHans(s string) string {
@@ -56,89 +51,11 @@ func IsDigital(r rune) bool {
 	}
 	return true
 }
-func NewToken() string {
-	ct := time.Now().UnixNano()
-	h := md5.New()
-	io.WriteString(h, strconv.FormatInt(ct, 10))
-	token := fmt.Sprintf("%x", h.Sum(nil))
-	return token
-}
 func MD5from(s string) string {
 	h := md5.New()
 	io.WriteString(h, s)
 	token := fmt.Sprintf("%x", h.Sum(nil))
 	return token
-}
-
-func GetTimeStrNow() string {
-	return time.Now().Format("2006-01-02 15:04:05")
-}
-func NewNumToken() string {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	return strconv.FormatInt(int64(r.Intn(60000)), 10)
-}
-
-func GetOS() string {
-	return runtime.GOOS
-}
-func HandleTmpDir(pkgDir string) {
-	path, _ := filepath.Abs(pkgDir)
-	if GetOS() == "android" {
-		e := os.MkdirAll(path+"/tmp", 0755)
-		if e != nil {
-			fmt.Println("mkdirAll() failed:", e)
-			return
-		} else {
-			os.Setenv("TMPDIR", path+"/tmp/")
-		}
-	}
-}
-func FmtDuration(d time.Duration) string {
-	str := ""
-	y := d / (time.Hour * 24 * 365)
-	if y != 0 {
-		str += fmt.Sprintf("%d年", y)
-		d -= y * time.Hour * 24 * 365
-	}
-	m := d / (time.Hour * 24 * 30)
-	if m != 0 {
-		str += fmt.Sprintf("%d个月", m)
-		d -= m * time.Hour * 24 * 30
-	}
-	day := d / (time.Hour * 24)
-	if day != 0 {
-		str += fmt.Sprintf("%d天", day)
-		d -= day * time.Hour * 24
-	}
-	hour := d / time.Hour
-	if hour != 0 {
-		str += fmt.Sprintf("%d个小时", hour)
-		d -= hour * time.Hour
-	}
-	min := d / time.Minute
-	if min != 0 {
-		str += fmt.Sprintf("%d分钟", min)
-		d -= min * time.Minute
-	}
-	if y == 0 && m == 0 && day == 0 && hour == 0 && min == 0 {
-		second := d / time.Second
-		if second != 0 {
-			str += fmt.Sprintf("%d秒", second)
-			d -= second * time.Second
-		}
-	}
-	return str
-}
-
-func Getrpath(path string) string {
-	if len(path) == 0 {
-		return ""
-	}
-	sep := string(os.PathSeparator)
-	if GetLast(path) == sep {
-		return path
-	}
-	return path + sep
 }
 
 func GetLast(s string) string {
@@ -149,44 +66,6 @@ func GetLast(s string) string {
 	return s[index:]
 }
 
-func Getunpath(path string) string {
-	if len(path) == 0 {
-		return ""
-	}
-	sep := string(os.PathSeparator)
-	if GetLast(path) != sep {
-		return path
-	}
-	return path[:len(path)-1]
-}
-
-func EndsWith(s, suffix string) bool {
-	if len(suffix) > len(s) {
-		return false
-	}
-	if s[len(s)-len(suffix):] == suffix {
-		return true
-	}
-	return false
-}
-func StartsWith(s, preffix string) bool {
-	if len(preffix) > len(s) {
-		return false
-	}
-	if s[:len(preffix)] == preffix {
-		return true
-	}
-	return false
-}
-func GetUserHomeDir() string {
-	c, e := user.Current()
-	if e != nil {
-		fmt.Println(e)
-		d, _ := os.Getwd()
-		return d
-	}
-	return c.HomeDir
-}
 func RandomPort() string {
 	p := rand.Intn(40000) + 10000
 	return strconv.Itoa(p)
@@ -245,17 +124,4 @@ func versionToIntegers(s string) ([]int, error) {
 		is = append(is, int(i))
 	}
 	return is, nil
-}
-
-func GetDirOfFile(path string) string {
-	if path == "" {
-		return path
-	}
-	sep := string(os.PathSeparator)
-	for i := len(path) - 1; i > -1; i-- {
-		if path[i:i+1] == sep {
-			return path[:i+1]
-		}
-	}
-	return path
 }
