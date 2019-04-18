@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -78,11 +79,12 @@ func ReadLine(r *bufio.Reader) (string, error) {
 func GetGOPATH() string {
 	return strToolkit.Getrpath(os.Getenv("GOPATH"))
 }
-func GetPkgFromDir(dir string) (string, error) {
-	dir = strToolkit.Getrpath(dir)
-	if !IsDirExists(dir) {
-		return "", errors.New("dir " + dir + " does not exists")
+func GetGoPkgFromDirPath(dir string) (string, error) {
+	dir, e := filepath.Abs(dir)
+	if e != nil {
+		return "", e
 	}
+	dir = strToolkit.Getrpath(dir)
 	if !strings.Contains(dir, GetGOPATH()) {
 		return "", errors.New("dir " + dir + " is not a Go Package")
 	}
@@ -109,8 +111,8 @@ func MkdirsOfFilePath(fpath string) string {
 	return dir
 }
 
-// ParseGoPkg formats path like : ./model , ../me_gengo , /home/asd/go/src/base... into Go Package like github.com/StevenZack/gengo
-func ParseGoPkg(curDir, pkg string) string {
+// ParseGoPkg formats path like : ./model , ../me_gengo , /home/asd/go/src/base... into absolute path
+func GetPathOfGoPkg(curDir, pkg string) string {
 	sep := string(os.PathSeparator)
 	if strings.Contains(pkg, sep) {
 		if strings.HasPrefix(pkg, "."+sep) || strings.HasPrefix(pkg, ".."+sep) {
@@ -119,7 +121,7 @@ func ParseGoPkg(curDir, pkg string) string {
 		if strings.HasPrefix(pkg, sep) || runtime.GOOS == "windows" && strings.Contains(pkg, ":"+sep) {
 			return pkg
 		}
-		return GetGOPATH() + pkg
+		return GetGOPATH() + "src/" + pkg
 	}
-	return strToolkit.Getrpath(curDir) + pkg
+	return GetGOPATH() + "src/" + pkg
 }
