@@ -138,9 +138,9 @@ func GetFileMimeType(f string) string {
 func GetHomeDir() string {
 	u, e := user.Current()
 	if e != nil {
-		return GetCurrentExecPath()
+		return strToolkit.Getrpath(GetCurrentExecPath())
 	}
-	return u.HomeDir
+	return strToolkit.Getrpath(u.HomeDir)
 }
 
 func GetIconURLByFileType(fpath string) string {

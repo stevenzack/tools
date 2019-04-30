@@ -5,8 +5,6 @@ import (
 	"errors"
 	"os"
 	"strings"
-
-	"github.com/StevenZack/tools/strToolkit"
 )
 
 func GetAllImports(path string) ([]string, error) {
@@ -24,7 +22,7 @@ func GetAllImports(path string) ([]string, error) {
 		if e != nil {
 			break
 		}
-		if !strToolkit.StartsWith(line, "import") {
+		if !strings.HasPrefix(line, "import") {
 			continue
 		}
 
@@ -64,10 +62,10 @@ func getImportFromL(l string) (string, error) {
 		if count != 2 {
 			continue
 		}
-		if !strToolkit.StartsWith(str, `"`) {
+		if !strings.HasPrefix(str, `"`) {
 			continue
 		}
-		if !strToolkit.EndsWith(str, `"`) {
+		if !strings.HasSuffix(str, `"`) {
 			continue
 		}
 		return str[1 : len(str)-1], nil
