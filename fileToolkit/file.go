@@ -86,7 +86,7 @@ func GetCurrentExecPath() string {
 		fmt.Println("filepath.Abs(f) failed", e)
 		return ""
 	}
-	return realPath
+	return strToolkit.Getrpath(realPath)
 }
 func WriteFile(f string) (*os.File, error) {
 	dir, e := GetDirOfFile(f)
