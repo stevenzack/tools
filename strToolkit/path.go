@@ -66,5 +66,5 @@ func GetDirOfFile(path string) string {
 			return path[:i+1]
 		}
 	}
-	return path
+	return "." + string(os.PathSeparator)
 }

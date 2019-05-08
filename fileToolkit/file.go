@@ -89,11 +89,8 @@ func GetCurrentExecPath() string {
 	return strToolkit.Getrpath(realPath)
 }
 func WriteFile(f string) (*os.File, error) {
-	dir, e := GetDirOfFile(f)
-	if e != nil {
-		return nil, e
-	}
-	e = os.MkdirAll(dir, 0755)
+	dir := strToolkit.GetDirOfFile(f)
+	e := os.MkdirAll(dir, 0755)
 	if e != nil {
 		fmt.Println(e)
 		return nil, e
