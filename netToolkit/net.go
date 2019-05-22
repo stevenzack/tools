@@ -317,3 +317,27 @@ func GetIPs() []string {
 	}
 	return strs
 }
+
+func DoJSONRequest(url string, i interface{}) (string, error) {
+	b, e := json.Marshal(i)
+	if e != nil {
+		return "", e
+	}
+	body := bytes.NewReader(b)
+	r, e := http.NewRequest("POST", url, body)
+	if e != nil {
+		return "", e
+	}
+	c := http.Client{}
+	r.Header.Set("Content-Type", "application/json")
+	rp, e := c.Do(r)
+	if e != nil {
+		return "", e
+	}
+	defer rp.Body.Close()
+	back, e := ioutil.ReadAll(rp.Body)
+	if e != nil {
+		return "", e
+	}
+	return string(back), nil
+}
