@@ -1,10 +1,12 @@
 package ioToolkit
 
 import (
+	"bufio"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 func ReadAll(r io.Reader) string {
@@ -21,4 +23,12 @@ func RunAttachedCmd(program string, args ...string) error {
 	c.Stderr = os.Stderr
 	e := c.Run()
 	return e
+}
+
+func ReadLine() (string, error) {
+	s, e := bufio.NewReader(os.Stdin).ReadString('\n')
+	if e != nil {
+		return "", e
+	}
+	return strings.TrimSuffix(s, "\n"), nil
 }
