@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -38,7 +39,7 @@ func ReadLine() (string, error) {
 func Log(is ...interface{}) {
 	args := []interface{}{}
 	_, file, line, _ := runtime.Caller(2)
-	args = append(args, file, line)
+	args = append(args, file+":"+strconv.Itoa(line))
 	args = append(args, is...)
 	fmt.Println(args...)
 }
