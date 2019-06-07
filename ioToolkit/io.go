@@ -2,10 +2,12 @@ package ioToolkit
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -31,4 +33,12 @@ func ReadLine() (string, error) {
 		return "", e
 	}
 	return strings.TrimSuffix(s, "\n"), nil
+}
+
+func Log(is ...interface{}) {
+	args := []interface{}{}
+	_, file, line, _ := runtime.Caller(2)
+	args = append(args, file, line)
+	args = append(args, is...)
+	fmt.Println(args...)
 }
