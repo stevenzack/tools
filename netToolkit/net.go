@@ -10,8 +10,11 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/StevenZack/tools/ioToolkit"
 
 	"github.com/StevenZack/tools/fileToolkit"
 	"github.com/StevenZack/tools/strToolkit"
@@ -251,13 +254,15 @@ func DownloadFile(url, fdist string) error {
 	_, e = io.Copy(f, rp.Body)
 	return e
 }
+
+// DownloadFileToDir return filename
 func DownloadFileToDir(url, dir string) (string, error) {
 	rp, e := http.Get(url)
 	if e != nil {
 		return "", e
 	}
 	defer rp.Body.Close()
-	filename := getDispFileName(rp.Request.URL.EscapedPath(), rp.Header.Get("Content-Disposition"))
+	filename := GetDispFileName(rp)
 	f, e := fileToolkit.WriteFile(strToolkit.Getrpath(dir) + filename)
 	if e != nil {
 		return "", e
@@ -266,7 +271,9 @@ func DownloadFileToDir(url, dir string) (string, error) {
 	_, e = io.Copy(f, rp.Body)
 	return filename, e
 }
-func getDispFileName(url, str string) string {
+func GetDispFileName(rp *http.Response) string {
+	url := rp.Request.URL.EscapedPath()
+	str := rp.Header.Get("Content-Disposition")
 	strs := strings.Split(str, ";")
 	if len(strs) < 2 {
 		return GetFileNameFromEscURL(url)
@@ -340,4 +347,42 @@ func DoJSONRequest(url string, i interface{}) (string, error) {
 		return "", e
 	}
 	return string(back), nil
+}
+
+func DownloadFileWithProgress(url, dst string, onProgress func(rcv, total uint64)) error {
+	rp, e := http.Get(url)
+	if e != nil {
+		return e
+	}
+	defer rp.Body.Close()
+	length, e := strconv.ParseUint(rp.Header.Get("Content-Length"), 10, 64)
+	if e != nil {
+		return e
+	}
+
+	var fo *os.File
+	st, e := os.Stat(dst)
+	if e == nil && st.IsDir() {
+		fo, e = fileToolkit.WriteFile(strToolkit.Getrpath(dst) + GetDispFileName(rp))
+		if e != nil {
+			return e
+		}
+	} else {
+		fo, e = fileToolkit.WriteFile(dst)
+		if e != nil {
+			return e
+		}
+	}
+	defer fo.Close()
+
+	wc := &ioToolkit.WriteCounter{}
+	wc.OnProgress = func(i uint64) {
+		onProgress(i, length)
+	}
+	_, e = io.Copy(fo, io.TeeReader(rp.Body, wc))
+	if e != nil {
+		return e
+	}
+
+	return nil
 }
