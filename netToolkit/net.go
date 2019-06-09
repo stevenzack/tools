@@ -3,6 +3,7 @@ package netToolkit
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -355,6 +356,15 @@ func DownloadFileWithProgress(url, dst string, onProgress func(rcv, total uint64
 		return e
 	}
 	defer rp.Body.Close()
+
+	if rp.Status != "200 OK" {
+		b, e := ioutil.ReadAll(rp.Body)
+		if e != nil {
+			return e
+		}
+		return errors.New(string(b))
+	}
+
 	length, e := strconv.ParseUint(rp.Header.Get("Content-Length"), 10, 64)
 	if e != nil {
 		return e
