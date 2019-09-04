@@ -251,3 +251,27 @@ func GetNameOfPath(path string) (string, error) {
 	}
 	return info.Name(), nil
 }
+
+func GetAllFilesFromFolder(dir string) ([]string, error) {
+	prefix := strToolkit.Getrpath(dir)
+	fs, e := ioutil.ReadDir(dir)
+	if e != nil {
+		return nil, e
+	}
+	out := []string{}
+	for _, f := range fs {
+		path := prefix + f.Name()
+		if f.IsDir() {
+			subfs, e := GetAllFilesFromFolder(path)
+			if e != nil {
+				return nil, e
+			}
+
+			out = append(out, subfs...)
+			continue
+		}
+
+		out = append(out, path)
+	}
+	return out, nil
+}
