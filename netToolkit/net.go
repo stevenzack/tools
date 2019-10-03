@@ -313,7 +313,11 @@ func GetIPs() []string {
 			switch v := addr.(type) {
 			case *net.IPNet:
 				ip := v.IP
-				if ip.String() == "::1" || strings.Contains(ip.String(), ":") {
+				if strings.Contains(ip.String(), "::") || ip.String() == "127.0.0.1" {
+					continue
+				}
+				if strings.Contains(ip.String(), ":") {
+					strs = append(strs, "["+ip.String()+"]")
 					continue
 				}
 				strs = append(strs, ip.String())
