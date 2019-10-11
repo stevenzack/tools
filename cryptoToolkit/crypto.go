@@ -6,8 +6,10 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
@@ -82,4 +84,11 @@ func GenConfig() *tls.Config {
 		panic(err)
 	}
 	return &tls.Config{Certificates: []tls.Certificate{tlsCert}}
+}
+
+func CalcSecWebSocketAccept(input string) string {
+	input += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+	sum := sha1.Sum([]byte(input))
+	str := base64.StdEncoding.EncodeToString(sum[:])
+	return str
 }
