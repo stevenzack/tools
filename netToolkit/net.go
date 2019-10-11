@@ -303,6 +303,7 @@ func GetIPs() []string {
 		return nil
 	}
 	var strs []string
+	var ipv6s []string
 	for _, i := range ifaces {
 		addrs, err := i.Addrs()
 		if err != nil {
@@ -313,7 +314,11 @@ func GetIPs() []string {
 			switch v := addr.(type) {
 			case *net.IPNet:
 				ip := v.IP
-				if ip.String() == "::1" || strings.Contains(ip.String(), ":") {
+				if strings.Contains(ip.String(), "::") || ip.String() == "127.0.0.1" {
+					continue
+				}
+				if strings.Contains(ip.String(), ":") {
+					ipv6s = append(ipv6s, "["+ip.String()+"]")
 					continue
 				}
 				strs = append(strs, ip.String())
@@ -323,7 +328,7 @@ func GetIPs() []string {
 			}
 		}
 	}
-	return strs
+	return append(strs, ipv6s...)
 }
 
 func DoJSONRequest(url string, i interface{}) (string, error) {
