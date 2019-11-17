@@ -26,7 +26,7 @@ func NewNumToken() string {
 	return strconv.FormatInt(int64(r.Intn(60000)), 10)
 }
 
-func FmtDuration(d time.Duration) string {
+func FormatDuration(d time.Duration) string {
 	str := ""
 	y := d / (time.Hour * 24 * 365)
 	if y != 0 {
