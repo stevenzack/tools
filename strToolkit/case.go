@@ -87,3 +87,17 @@ func ToUpper(s string) string {
 	}
 	return string(out)
 }
+
+func LowerFirst(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return ToLower(s[:1]) + s[1:]
+}
+
+func UpperFirst(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return ToUpper(s[:1]) + s[1:]
+}
