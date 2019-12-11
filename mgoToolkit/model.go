@@ -3,11 +3,11 @@ package mgoToolkit
 import (
 	"context"
 	"errors"
+	"log"
 	"reflect"
 
 	"github.com/StevenZack/tools/strToolkit"
 
-	"github.com/StevenZack/ghostman/logx"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -24,7 +24,7 @@ func NewBaseModel(dsn string, data interface{}) (*BaseModel, error) {
 	model := &BaseModel{DataSourceName: dsn}
 	e := model.initData(data)
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return nil, e
 	}
 	return model, nil
@@ -58,12 +58,12 @@ func (b *BaseModel) initData(data interface{}) error {
 
 	db, e := TakeDatabase(b.DataSourceName)
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return e
 	}
 	e = CreateIndexIfNotExists(db, b.Coll, indexes)
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return e
 	}
 	return nil
@@ -72,7 +72,7 @@ func (b *BaseModel) initData(data interface{}) error {
 func (b *BaseModel) TakeCollection() (*mongo.Collection, error) {
 	db, e := TakeDatabase(b.DataSourceName)
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return nil, e
 	}
 	return db.Collection(b.Coll), nil
@@ -100,13 +100,13 @@ func (b *BaseModel) Insert(v interface{}) error {
 
 	coll, e := b.TakeCollection()
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return e
 	}
 
 	_, e = coll.InsertOne(context.TODO(), v)
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return e
 	}
 	return nil
@@ -115,20 +115,20 @@ func (b *BaseModel) Insert(v interface{}) error {
 func (b *BaseModel) FindByID(id string) (interface{}, error) {
 	objId, e := primitive.ObjectIDFromHex(id)
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return nil, e
 	}
 
 	coll, e := b.TakeCollection()
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return nil, e
 	}
 
 	v := reflect.New(b.Type)
 	e = coll.FindOne(context.TODO(), bson.M{"_id": objId}).Decode(v.Interface())
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return nil, e
 	}
 
@@ -138,13 +138,13 @@ func (b *BaseModel) FindByID(id string) (interface{}, error) {
 func (b *BaseModel) UpdateByID(id string, updater bson.M) (int64, error) {
 	objId, e := primitive.ObjectIDFromHex(id)
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return 0, e
 	}
 
 	coll, e := b.TakeCollection()
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return 0, e
 	}
 
@@ -152,7 +152,7 @@ func (b *BaseModel) UpdateByID(id string, updater bson.M) (int64, error) {
 		"$set": updater,
 	})
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return 0, e
 	}
 	return l.ModifiedCount, nil

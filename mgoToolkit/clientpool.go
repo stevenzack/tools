@@ -2,8 +2,8 @@ package mgoToolkit
 
 import (
 	"context"
+	"log"
 
-	"github.com/StevenZack/ghostman/logx"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
@@ -17,7 +17,7 @@ func TakeClient(dsn string) (*mongo.Client, error) {
 	}
 	client, e := mongo.Connect(context.TODO(), options.Client().ApplyURI(dsn))
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return nil, e
 	}
 	clientPool[dsn] = client
@@ -27,12 +27,12 @@ func TakeClient(dsn string) (*mongo.Client, error) {
 func TakeDatabase(dsn string) (*mongo.Database, error) {
 	info, e := connstring.Parse(dsn)
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return nil, e
 	}
 	client, e := TakeClient(dsn)
 	if e != nil {
-		logx.Error(e)
+		log.Println(e)
 		return nil, e
 	}
 	return client.Database(info.Database), nil

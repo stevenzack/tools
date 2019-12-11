@@ -8,11 +8,10 @@ import (
 )
 
 // CreateTableIfNotExists create table automatically,and return table name
-func CreateTableIfNotExists(dsn string, v interface{}) (string, error) {
+func CreateTableIfNotExists(dsn string, data interface{}) (string, error) {
 	db, e := sql.Open("mysql", dsn)
 	if e != nil {
 		log.Println(e)
 		return "", e
 	}
-	
 }
