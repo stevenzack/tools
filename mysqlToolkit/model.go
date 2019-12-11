@@ -30,7 +30,7 @@ type (
 )
 
 // NewBaseMySQLModel 新建基础Model
-func NewBaseMySQLModel(appName string, dsn string, data interface{}) (*BaseMySQLModel, error) {
+func NewBaseMySQLModel(appName string, dsn string, data interface{}) (*BaseMySQLModel, bool, error) {
 	b := &BaseMySQLModel{
 		AppName: appName,
 	}
@@ -38,26 +38,26 @@ func NewBaseMySQLModel(appName string, dsn string, data interface{}) (*BaseMySQL
 	dsn, b.Database, e = ParseMySQLDatabase(dsn)
 	if e != nil {
 		log.Println(e)
-		return nil, e
+		return nil, false, e
 	}
 	b.Conn, e = NewMySQL(dsn)
 	if e != nil {
 		log.Println(e)
-		return nil, e
+		return nil, false, e
 	}
 
-	e = b.initData(data)
+	createdTable, e := b.initData(data)
 	if e != nil {
 		log.Println(e)
-		return nil, e
+		return nil, false, e
 	}
 
 	b.generateSQLInsert()
-	return b, nil
+	return b, createdTable, nil
 }
 
 // initData 如果表不存在，会自动建表，建索引
-func (b *BaseMySQLModel) initData(data interface{}) error {
+func (b *BaseMySQLModel) initData(data interface{}) (bool, error) {
 	b.Type = reflect.TypeOf(data)
 	if b.Type.Kind().String() == "ptr" {
 		b.Type = b.Type.Elem()
@@ -71,18 +71,18 @@ func (b *BaseMySQLModel) initData(data interface{}) error {
 		// tag check
 		db, ok := field.Tag.Lookup("db")
 		if !ok {
-			return errors.New(b.Type.Name() + "类型的" + field.Name + "字段没有写'db' Tag")
+			return false, errors.New(b.Type.Name() + "类型的" + field.Name + "字段没有写'db' Tag")
 		}
 		if db != strToolkit.ToSnakeCase(field.Name) {
-			return errors.New(b.Type.Name() + "类型的'db'Tag格式不是标准的SnakeCase")
+			return false, errors.New(b.Type.Name() + "类型的'db'Tag格式不是标准的SnakeCase")
 		}
 		comment, ok := field.Tag.Lookup("comment")
 		if !ok {
-			return errors.New(b.Type.Name() + "类型的" + field.Name + "字段没写comment")
+			return false, errors.New(b.Type.Name() + "类型的" + field.Name + "字段没写comment")
 		}
 		length, e := GetLengthTag(field)
 		if e != nil {
-			return errors.New(b.Type.Name() + "类型的" + field.Name + "字段的'length' Tag格式不正确")
+			return false, errors.New(b.Type.Name() + "类型的" + field.Name + "字段的'length' Tag格式不正确")
 		}
 
 		// collect info
@@ -95,7 +95,7 @@ func (b *BaseMySQLModel) initData(data interface{}) error {
 		sqlType, modifiable, e := GoTypeToSQLType(field.Type, db, length)
 		if e != nil {
 			log.Println(e)
-			return e
+			return false, e
 		}
 		b.sqlGenerated += db + ` ` + sqlType + ` `
 		if i == 0 {
@@ -127,17 +127,17 @@ func (b *BaseMySQLModel) initData(data interface{}) error {
 	created, e := CreateTableIfNotExists(b.Conn, b.TableName, b.sqlGenerated)
 	if e != nil {
 		log.Println(e)
-		return e
+		return false, e
 	}
 	if created {
 		e := CreateIndexes(b.Conn, b.Database, b.TableName, indexes)
 		if e != nil {
 			log.Println(e)
-			return e
+			return false, e
 		}
 	}
 
-	return nil
+	return created, nil
 }
 
 func (b *BaseMySQLModel) generateSQLInsert() {
