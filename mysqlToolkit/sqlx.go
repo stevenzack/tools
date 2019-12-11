@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"reflect"
-	"strconv"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -72,7 +70,7 @@ func (s *SqlConn) queryRow(v interface{}, query string, strict bool, args ...int
 			continue
 		}
 		field := t.Field(fieldIndex)
-		goValue, e := toGoValue(field, scanValues[i])
+		goValue, e := toGoValue(field, string(scanValues[i].([]uint8)))
 		if e != nil {
 			return e
 		}
@@ -135,7 +133,7 @@ func (s *SqlConn) queryRows(v interface{}, query string, strict bool, args ...in
 				continue
 			}
 			field := t.Field(fieldIndex)
-			goValue, e := toGoValue(field, scanValues[i])
+			goValue, e := toGoValue(field, string(scanValues[i].([]uint8)))
 			if e != nil {
 				return e
 			}
@@ -167,53 +165,6 @@ func (s *SqlConn) QueryRowsPartial(vs interface{}, query string, args ...interfa
 	return s.queryRows(vs, query, false, args...)
 }
 
-func toGoValue(field reflect.StructField, v interface{}) (interface{}, error) {
-	origin := string(v.([]uint8))
-	switch field.Type.Kind() {
-	case reflect.String:
-		return origin, nil
-		// int
-	case reflect.Int:
-		return strconv.Atoi(origin)
-	case reflect.Int8:
-		i, e := strconv.ParseInt(origin, 10, 64)
-		return int8(i), e
-	case reflect.Int16:
-		i, e := strconv.ParseInt(origin, 10, 64)
-		return int16(i), e
-	case reflect.Int32:
-		i, e := strconv.ParseInt(origin, 10, 64)
-		return int32(i), e
-	case reflect.Int64:
-		i, e := strconv.ParseInt(origin, 10, 64)
-		return i, e
-		// uint
-	case reflect.Uint:
-		return strconv.Atoi(origin)
-	case reflect.Uint8:
-		i, e := strconv.ParseInt(origin, 10, 64)
-		return uint8(i), e
-	case reflect.Uint16:
-		i, e := strconv.ParseInt(origin, 10, 64)
-		return uint16(i), e
-	case reflect.Uint32:
-		i, e := strconv.ParseInt(origin, 10, 64)
-		return uint32(i), e
-	case reflect.Uint64:
-		i, e := strconv.ParseInt(origin, 10, 64)
-		return uint64(i), e
-		// float
-	case reflect.Float32:
-		f, e := strconv.ParseFloat(origin, 64)
-		return float32(f), e
-	case reflect.Float64:
-		f, e := strconv.ParseFloat(origin, 64)
-		return f, e
-	}
-	// time
-	if field.Type.Name() == "Time" {
-		t, e := time.Parse(LayoutTime+" MST", origin+" CST")
-		return t, e
-	}
-	return nil, errors.New("unsupported type " + field.Type.Kind().String())
+func (s *SqlConn) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return s.db.Exec(query, args)
 }
