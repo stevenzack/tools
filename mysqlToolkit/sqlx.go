@@ -28,8 +28,8 @@ func NewMySQL(dsn string) (*SqlConn, error) {
 func (s *SqlConn) queryRow(v interface{}, query string, strict bool, args ...interface{}) error {
 	t := reflect.TypeOf(v)
 	value := reflect.ValueOf(v)
-	if t.Kind().String() != "ptr" {
-		return errors.New("value scan destination must be a pointer type")
+	if t.Kind() != reflect.Ptr {
+		return errors.New("scan destination must be a pointer type")
 	}
 	t = t.Elem()
 	value = value.Elem()
@@ -45,7 +45,7 @@ func (s *SqlConn) queryRow(v interface{}, query string, strict bool, args ...int
 	}
 
 	if strict && t.NumField() < len(columns) {
-		return errors.New("value destination scan field num doesn't match")
+		return errors.New("scan destination's field num doesn't match")
 	}
 
 	scanArgs := make([]interface{}, len(columns))
@@ -81,6 +81,76 @@ func (s *SqlConn) queryRow(v interface{}, query string, strict bool, args ...int
 	return nil
 }
 
+func (s *SqlConn) queryRows(v interface{}, query string, strict bool, args ...interface{}) error {
+	t := reflect.TypeOf(v)
+	sliceValue := reflect.ValueOf(v)
+	if t.Kind() != reflect.Ptr {
+		return errors.New(" scan destination must be a pointer type")
+	}
+	t = t.Elem()
+	sliceValue = sliceValue.Elem()
+	if t.Kind() != reflect.Slice {
+		return errors.New("scan destination must be a pointer of slice")
+	}
+	t = t.Elem()
+	ptrMode := false
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+		ptrMode = true
+	}
+
+	rows, e := s.db.Query(query, args...)
+	if e != nil {
+		return e
+	}
+
+	columns, e := rows.Columns()
+	if e != nil {
+		return e
+	}
+
+	if strict && t.NumField() < len(columns) {
+		return errors.New("scan destination's field num doesn't match")
+	}
+	scanArgs := make([]interface{}, len(columns))
+	scanValues := make([]interface{}, len(columns))
+	for i := range scanArgs {
+		scanArgs[i] = &scanValues[i]
+	}
+
+	fieldMap := GetDBTagMap(t)
+	for rows.Next() {
+		e := rows.Scan(scanArgs...)
+		if e != nil {
+			return e
+		}
+		value := reflect.New(t)
+
+		for i := 0; i < len(columns); i++ {
+			fieldIndex, ok := fieldMap[columns[i]]
+			if !ok {
+				if strict {
+					return errors.New("field '" + columns[i] + "' doesn't match")
+				}
+				continue
+			}
+			field := t.Field(fieldIndex)
+			goValue, e := toGoValue(field, scanValues[i])
+			if e != nil {
+				return e
+			}
+			value.Elem().Field(fieldIndex).Set(reflect.ValueOf(goValue))
+		}
+
+		if !ptrMode {
+			value = value.Elem()
+		}
+		sliceValue.Set(reflect.Append(sliceValue, value))
+	}
+
+	return nil
+}
+
 func (s *SqlConn) QueryRow(v interface{}, query string, args ...interface{}) error {
 	return s.queryRow(v, query, true, args...)
 }
@@ -89,9 +159,16 @@ func (s *SqlConn) QueryRowPartial(v interface{}, query string, args ...interface
 	return s.queryRow(v, query, false, args...)
 }
 
+func (s *SqlConn) QueryRows(vs interface{}, query string, args ...interface{}) error {
+	return s.queryRows(vs, query, true, args...)
+}
+
+func (s *SqlConn) QueryRowsPartial(vs interface{}, query string, args ...interface{}) error {
+	return s.queryRows(vs, query, false, args...)
+}
+
 func toGoValue(field reflect.StructField, v interface{}) (interface{}, error) {
 	origin := string(v.([]uint8))
-	println(origin, field.Type.Kind().String())
 	switch field.Type.Kind() {
 	case reflect.String:
 		return origin, nil

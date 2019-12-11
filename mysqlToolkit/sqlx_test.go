@@ -6,9 +6,10 @@ import (
 )
 
 type User struct {
-	ID         int       `db:"id"`
-	Email      string    `db:"email"`
-	Password   string    `db:"password"`
+	ID         int    `db:"id"`
+	Email      string `db:"email"`
+	Password   string `db:"password"`
+	SendTime   time.Time
 	UpdateTime time.Time `db:"update_time"`
 	CreateTime time.Time
 }
@@ -20,16 +21,11 @@ func TestSqlConn_QueryRow(t *testing.T) {
 		return
 	}
 
-	v := User{}
-	e = c.QueryRowPartial(&v, `select * from galaxy_user`)
+	vs := []*User{}
+	e = c.QueryRows(&vs, `select * from galaxy_user`)
 	if e != nil {
 		t.Error(e)
 		return
 	}
-	if v.Email != `email` {
-		t.Error("v.Email is not `email` , but ", v.Email)
-		return
-	}
-	t.Log(v.ID)
-	t.Log(v.UpdateTime)
+	t.Log(vs[0])
 }
