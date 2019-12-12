@@ -193,6 +193,23 @@ func (b *BaseMySQLModel) FindBy(field string, fieldValue interface{}) (interface
 	return v, nil
 }
 
+func (b *BaseMySQLModel) Update(id interface{}, sets string) (int64, error) {
+	query := `update ` + b.TableName + ` set ` + sets + ` where ` + b.Columns[0] + `=?`
+	result, e := b.Conn.Exec(query, id)
+	if e != nil {
+		return 0, e
+	}
+	return result.RowsAffected()
+}
+
+func (b *BaseMySQLModel) Delete(id interface{}) (int64, error) {
+	query := `delete ` + b.TableName + ` where ` + b.Columns[0] + `=?`
+	result, e := b.Conn.Exec(query, id)
+	if e != nil {
+		return 0, e
+	}
+	return result.RowsAffected()
+}
 func (b *BaseMySQLModel) Count(where string, args ...interface{}) (int64, error) {
 	c := Count{}
 	if where != "" {
