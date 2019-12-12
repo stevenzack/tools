@@ -27,6 +27,10 @@ func ToSnakeCase(s string) string {
 				out = append(out, '_', ToLowerCase(r))
 				continue
 			}
+			if index<len(s)-1&&IsLowerCase(rune(s[index+1])){
+				out=append(out, '_',ToLowerCase(r))
+				continue
+			}
 			out = append(out, ToLowerCase(r))
 			continue
 		}
