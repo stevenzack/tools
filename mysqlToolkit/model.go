@@ -17,7 +17,7 @@ type (
 		TableName string
 		Type      reflect.Type
 
-		DBs              []string
+		Columns          []string
 		ModifiableDBs    []string
 		ModifiableFields []string
 
@@ -86,7 +86,7 @@ func (b *BaseMySQLModel) initData(data interface{}) (bool, error) {
 		}
 
 		// collect info
-		b.DBs = append(b.DBs, db)
+		b.Columns = append(b.Columns, db)
 		if _, ok := field.Tag.Lookup("index"); ok {
 			indexes = append(indexes, db)
 		}
@@ -140,6 +140,24 @@ func (b *BaseMySQLModel) initData(data interface{}) (bool, error) {
 	return created, nil
 }
 
+func (b *BaseMySQLModel) tableColumnCheck() error {
+	columns, e := DescribeTable(b.Conn, b.TableName)
+	if e != nil {
+		return e
+	}
+	if len(columns) > len(b.Columns) {
+		return errors.New("线上" + b.TableName + "表的字段数比" + b.Type.Name() + "类型字段多")
+	}
+	for i, column := range columns {
+		if b.Columns[i] != column.Field {
+			return errors.New(b.Type.Name() + "类型与线上" + b.TableName + "表字段不一致：" + b.Columns[i] + "->" + column.Field)
+		}
+	}
+	if len(columns) != len(b.Columns) {
+		return errors.New("线上" + b.TableName + "表的字段数与" + b.Type.Name() + "类型字段数不一致")
+	}
+	return nil
+}
 func (b *BaseMySQLModel) generateSQLInsert() {
 	b.sqlInsert = `insert into ` + b.TableName + ` (` + strings.Join(b.ModifiableDBs, ",") + `) values(
 		` + strings.Join(strToolkit.SlicifyStr("?", len(b.ModifiableDBs)), ",") + `
@@ -162,11 +180,11 @@ func (b *BaseMySQLModel) Insert(data interface{}) error {
 }
 
 func (b *BaseMySQLModel) FindBy(field string, fieldValue interface{}) (interface{}, error) {
-	if !strToolkit.SliceContains(b.DBs, field) {
+	if !strToolkit.SliceContains(b.Columns, field) {
 		return nil, errors.New(`field ` + field + ` doesn't exists`)
 	}
 
-	query := `select ` + strings.Join(b.DBs, ",") + ` from ` + b.TableName + ` where ` + field + `=?`
+	query := `select ` + strings.Join(b.Columns, ",") + ` from ` + b.TableName + ` where ` + field + `=?`
 	v := reflect.New(b.Type).Interface()
 	e := b.Conn.QueryRow(v, query, fieldValue)
 	if e != nil {

@@ -168,3 +168,13 @@ func (s *SqlConn) QueryRowsPartial(vs interface{}, query string, args ...interfa
 func (s *SqlConn) Exec(query string, args ...interface{}) (sql.Result, error) {
 	return s.db.Exec(query, args)
 }
+
+type Column struct {
+	Field string `db:"Field"`
+}
+
+func DescribeTable(conn *SqlConn, table string) ([]*Column, error) {
+	vs := []*Column{}
+	e := conn.QueryRows(&vs, `describe `+table)
+	return vs, e
+}
