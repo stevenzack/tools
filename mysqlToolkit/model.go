@@ -203,7 +203,7 @@ func (b *BaseMySQLModel) Update(id interface{}, sets string) (int64, error) {
 }
 
 func (b *BaseMySQLModel) Delete(id interface{}) (int64, error) {
-	query := `delete ` + b.TableName + ` where ` + b.Columns[0] + `=?`
+	query := `delete from ` + b.TableName + ` where ` + b.Columns[0] + `=?`
 	result, e := b.Conn.Exec(query, id)
 	if e != nil {
 		return 0, e
