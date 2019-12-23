@@ -94,7 +94,7 @@ func CalcSecWebSocketAccept(input string) string {
 	return str
 }
 
-func HMacSHA1(key, s string) string {
+func HmacSHA1(key, s string) string {
 	//hmac ,use sha1
 	mac := hmac.New(sha1.New, []byte(key))
 	mac.Write([]byte(s))
