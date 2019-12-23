@@ -3,6 +3,7 @@ package cryptoToolkit
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
@@ -91,4 +92,23 @@ func CalcSecWebSocketAccept(input string) string {
 	sum := sha1.Sum([]byte(input))
 	str := base64.StdEncoding.EncodeToString(sum[:])
 	return str
+}
+
+func HMacSHA1(key, s string) string {
+	//hmac ,use sha1
+	mac := hmac.New(sha1.New, []byte(key))
+	mac.Write([]byte(s))
+	return string(mac.Sum(nil))
+}
+
+func Base64Encode(msg string) string {
+	encoded := base64.StdEncoding.EncodeToString([]byte(msg))
+	return encoded
+}
+func Base64Decode(msg string) (string, error) {
+	decoded, e := base64.StdEncoding.DecodeString(msg)
+	if e != nil {
+		return "", e
+	}
+	return string(decoded), nil
 }
