@@ -65,7 +65,7 @@ func (t *TreeNode) Print() {
 	})
 }
 
-func MakeTreeSequentially(list []int) *TreeNode {
+func MakeTreeBySlice(list []int) *TreeNode {
 	if len(list) == 0 || list[0] < 0 {
 		return nil
 	}
@@ -88,13 +88,11 @@ func MakeTreeSequentially(list []int) *TreeNode {
 		}
 		tree[level][levelIndex] = node
 		//next level
-		fmt.Print(item, ",")
 		if levelIndex == width-1 {
 			lastSize += width
 			level++
 			width = width * 2
 			tree = append(tree, make([]*TreeNode, width))
-			fmt.Println("")
 		}
 	}
 
