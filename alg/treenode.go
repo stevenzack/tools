@@ -27,17 +27,23 @@ func (t *TreeNode) rangeDfsRecursively(fn func(*TreeNode, int, bool), depth int,
 	}
 }
 
-func (t *TreeNode) RangeBfs(fn func(node *TreeNode)) {
-	queue := &Queue{}
-	queue.Push(t)
-	for queue.Length() > 0 {
-		node := queue.Pop().(*TreeNode)
-		fn(node)
+func (t *TreeNode) RangeBfs(fn func(node *TreeNode, depth int)) {
+	queue1, queue2 := &Queue{}, &Queue{}
+	queue1.Push(t)
+	depth := 0
+	current, next := queue1, queue2
+	for queue1.Length() > 0 || queue2.Length() > 0 {
+		node := current.Pop().(*TreeNode)
+		fn(node, depth)
 		if node.Left != nil {
-			queue.Push(node.Left)
+			next.Push(node.Left)
 		}
 		if node.Right != nil {
-			queue.Push(node.Right)
+			next.Push(node.Right)
+		}
+		if current.Length() == 0 {
+			depth++
+			current, next = next, current
 		}
 	}
 }
@@ -49,8 +55,13 @@ func (t *TreeNode) Print() {
 			maxDepth = depth
 		}
 	})
-	t.RangeBfs(func(n *TreeNode) {
-		fmt.Print(n.Val)
+	currentDepth := 0
+	t.RangeBfs(func(n *TreeNode, depth int) {
+		if depth != currentDepth {
+			currentDepth = depth
+			fmt.Println("")
+		}
+		fmt.Print(n.Val, ",")
 	})
 }
 
