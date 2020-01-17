@@ -94,11 +94,11 @@ func CalcSecWebSocketAccept(input string) string {
 	return str
 }
 
-func HmacSHA1(key, s string) string {
+func HmacSHA1(key, s string) []byte {
 	//hmac ,use sha1
 	mac := hmac.New(sha1.New, []byte(key))
 	mac.Write([]byte(s))
-	return string(mac.Sum(nil))
+	return mac.Sum(nil)
 }
 
 func Base64Encode(msg string) string {
@@ -111,4 +111,10 @@ func Base64Decode(msg string) (string, error) {
 		return "", e
 	}
 	return string(decoded), nil
+}
+
+func MD5(s string) []byte {
+	h := md5.New()
+	io.WriteString(h, s)
+	return h.Sum(nil)
 }
