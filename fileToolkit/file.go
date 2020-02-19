@@ -275,3 +275,8 @@ func GetAllFilesFromFolder(dir string) ([]string, error) {
 	}
 	return out, nil
 }
+
+func TruncateFile(f string) {
+	dir := strToolkit.UpperPath(f)
+	os.MkdirAll(dir, 0755)
+}

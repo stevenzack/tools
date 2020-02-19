@@ -126,37 +126,37 @@ func versionToIntegers(s string) ([]int, error) {
 	return is, nil
 }
 
-func SubBefore(s string, sep string) string {
+func SubBefore(s string, sep, def string) string {
 	for i := 0; i < len(s)-len(sep); i++ {
 		if s[i:i+len(sep)] == sep {
 			return s[:i]
 		}
 	}
-	return s
+	return def
 }
-func SubBeforeLast(s, sep string) string {
+func SubBeforeLast(s, sep, def string) string {
 	for i := len(s) - len(sep); i > -1; i-- {
 		if s[i:i+len(sep)] == sep {
 			return s[:i]
 		}
 	}
-	return s
+	return def
 }
 
-func SubAfter(s, sep string) string {
+func SubAfter(s, sep, def string) string {
 	for i := 0; i < len(s)-len(sep); i++ {
 		if s[i:i+len(sep)] == sep {
 			return s[i+len(sep):]
 		}
 	}
-	return ""
+	return def
 }
 
-func SubAfterLast(s, sep string) string {
+func SubAfterLast(s, sep, def string) string {
 	for i := len(s) - len(sep); i > -1; i-- {
 		if s[i:i+len(sep)] == sep {
 			return s[i+len(sep):]
 		}
 	}
-	return ""
+	return def
 }

@@ -68,3 +68,9 @@ func GetDirOfFile(path string) string {
 	}
 	return "." + string(os.PathSeparator)
 }
+
+func UpperPath(s string) string {
+	s = Getunpath(s)
+	sep := string(os.PathSeparator)
+	return SubBeforeLast(s, sep, sep)
+}
