@@ -19,6 +19,7 @@ import (
 func GetExt(p string) string {
 	return path.Ext(p)
 }
+
 func GetMimeType(f string) string {
 	info, e := os.Stat(f)
 	if e != nil {
