@@ -160,3 +160,21 @@ func SubAfterLast(s, sep, def string) string {
 	}
 	return def
 }
+
+func TrimStart(s, trim string) string {
+	if strings.HasPrefix(s, trim) {
+		return s[len(trim):]
+	}
+	return s
+}
+
+func TrimEnd(s, trim string) string {
+	if strings.HasSuffix(s, trim) {
+		return s[:len(s)-len(trim)]
+	}
+	return s
+}
+
+func TrimBoth(s, trim string) string {
+	return TrimStart(TrimEnd(s, trim), trim)
+}
