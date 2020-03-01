@@ -303,6 +303,9 @@ func GetIPs(ipv6 bool) []string {
 		return nil
 	}
 	strs := []string{}
+	maxAddr := ""
+	maxValue := 0
+	maxIndex := 0
 	ipv6s := []string{}
 	for _, i := range ifaces {
 		addrs, err := i.Addrs()
@@ -324,12 +327,22 @@ func GetIPs(ipv6 bool) []string {
 					continue
 				}
 				strs = append(strs, ip.String())
+				value, e := strconv.Atoi(strToolkit.SubBefore(ip.String(), ".", "0"))
+				if e != nil {
+					continue
+				}
+				if value > maxValue {
+					maxValue = value
+					maxAddr = ip.String()
+					maxIndex = len(strs) - 1
+				}
 			case *net.IPAddr:
 				// ip := v.IP
 				// strs = append(strs, ip.String())
 			}
 		}
 	}
+	strs = append([]string{maxAddr}, append(strs[:maxIndex], strs[maxIndex+1:]...)...)
 	return append(strs, ipv6s...)
 }
 
