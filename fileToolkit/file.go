@@ -21,26 +21,7 @@ func GetExt(p string) string {
 }
 
 func GetMimeType(f string) string {
-	info, e := os.Stat(f)
-	if e != nil {
-		fmt.Println(e)
-		return e.Error()
-	}
-	if info.IsDir() {
-		return "dir"
-	}
-	switch strings.ToLower(GetExt(info.Name())) {
-	case ".mp4", ".webm", ".mkv", ".3gp", ".flv", ".avi", ".mov", ".rmvb", ".wmv", ".m4v":
-		return "video"
-	case ".mp3", ".wav", ".amr", ".aac", ".wma", ".midi", ".flac":
-		return "audio"
-	case ".jpg", ".jpeg", ".webp", ".png", ".gif", ".apng", ".bmp", ".tif", ".svg", ".cdr":
-		return "image"
-	case ".txt", ".md", ".html", ".css", ".js", ".go", ".java", ".py", ".sh":
-		return "text"
-	default:
-		return "file"
-	}
+	return mime.TypeByExtension(GetExt(f))
 }
 
 // recursively
