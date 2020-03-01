@@ -319,7 +319,7 @@ func GetIPs(ipv6 bool) []string {
 				}
 				if strings.Contains(ip.String(), ":") {
 					if ipv6 {
-						ipv6s = append(ipv6s, ip.String())
+						ipv6s = append(ipv6s, "["+ip.String()+"]")
 					}
 					continue
 				}
