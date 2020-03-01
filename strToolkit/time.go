@@ -28,6 +28,9 @@ func NewNumToken() string {
 
 func FormatDuration(d time.Duration) string {
 	str := ""
+	if d < 0 {
+		str += "-"
+	}
 	y := d / (time.Hour * 24 * 365)
 	if y != 0 {
 		str += fmt.Sprintf("%d年", y)
