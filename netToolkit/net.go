@@ -296,14 +296,14 @@ func GetFileNameFromEscURL(url string) string {
 	return url
 }
 
-func GetIPs() []string {
+func GetIPs(ipv6 bool) []string {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
-	var strs []string
-	var ipv6s []string
+	strs := []string{}
+	ipv6s := []string{}
 	for _, i := range ifaces {
 		addrs, err := i.Addrs()
 		if err != nil {
@@ -314,11 +314,13 @@ func GetIPs() []string {
 			switch v := addr.(type) {
 			case *net.IPNet:
 				ip := v.IP
-				if strings.Contains(ip.String(), "::") || ip.String() == "127.0.0.1" {
+				if strings.HasSuffix(ip.String(), "::1") || ip.String() == "127.0.0.1" {
 					continue
 				}
 				if strings.Contains(ip.String(), ":") {
-					ipv6s = append(ipv6s, "["+ip.String()+"]")
+					if ipv6 {
+						ipv6s = append(ipv6s, "["+ip.String()+"]")
+					}
 					continue
 				}
 				strs = append(strs, ip.String())
