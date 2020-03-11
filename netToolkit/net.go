@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"mime/multipart"
 	"net"
 	"net/http"
@@ -415,4 +416,8 @@ func DownloadFileWithProgress(url, dst string, onProgress func(rcv, total uint64
 	}
 
 	return nil
+}
+
+func RandomPort() int {
+	return rand.Intn(10000) + 10000
 }
