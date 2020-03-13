@@ -75,15 +75,25 @@ func GetCurrentPath() (string, error) {
 	return os.Getwd()
 }
 
-func WriteFile(f string) (*os.File, error) {
+func WriteFile(f string, b []byte) error {
 	dir := strToolkit.GetDirOfFile(f)
 	e := os.MkdirAll(dir, 0755)
 	if e != nil {
 		fmt.Println(e)
-		return nil, e
+		return e
 	}
 	file, e := os.OpenFile(f, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
-	return file, e
+	if e != nil {
+		fmt.Println("open error :", e)
+		return e
+	}
+	defer file.Close()
+	_, e = file.Write(b)
+	if e != nil {
+		fmt.Println("write error :", e)
+		return e
+	}
+	return nil
 }
 func GetDirOfFile(f string) (string, error) {
 	info, e := os.Stat(f)
