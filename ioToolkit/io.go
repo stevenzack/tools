@@ -33,7 +33,7 @@ func ReadLine() (string, error) {
 	if e != nil {
 		return "", e
 	}
-	return strings.TrimSuffix(s, "\n"), nil
+	return strings.TrimSuffix(strings.TrimSuffix(s, "\n"), "\r"), nil
 }
 
 func Log(is ...interface{}) {
