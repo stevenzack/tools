@@ -18,7 +18,6 @@ import (
 
 	"github.com/StevenZack/tools/ioToolkit"
 
-	"github.com/StevenZack/tools/fileToolkit"
 	"github.com/StevenZack/tools/strToolkit"
 )
 
@@ -248,7 +247,7 @@ func DownloadFile(url, fdist string) error {
 		return e
 	}
 	defer rp.Body.Close()
-	f, e := fileToolkit.WriteFile(fdist)
+	f, e := os.OpenFile(fdist, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if e != nil {
 		return e
 	}
@@ -265,7 +264,7 @@ func DownloadFileToDir(url, dir string) (string, error) {
 	}
 	defer rp.Body.Close()
 	filename := GetDispFileName(rp)
-	f, e := fileToolkit.WriteFile(strToolkit.Getrpath(dir) + filename)
+	f, e := os.OpenFile(strToolkit.Getrpath(dir)+filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if e != nil {
 		return "", e
 	}
@@ -394,12 +393,12 @@ func DownloadFileWithProgress(url, dst string, onProgress func(rcv, total uint64
 	var fo *os.File
 	st, e := os.Stat(dst)
 	if e == nil && st.IsDir() {
-		fo, e = fileToolkit.WriteFile(strToolkit.Getrpath(dst) + GetDispFileName(rp))
+		fo, e = os.OpenFile(strToolkit.Getrpath(dst)+GetDispFileName(rp), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 		if e != nil {
 			return e
 		}
 	} else {
-		fo, e = fileToolkit.WriteFile(dst)
+		fo, e = os.OpenFile(dst, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 		if e != nil {
 			return e
 		}
