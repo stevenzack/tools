@@ -68,7 +68,7 @@ func GetCurrentExecPath() string {
 		fmt.Println("filepath.Abs(f) failed", e)
 		return ""
 	}
-	return strToolkit.Getrpath(realPath)
+	return realPath
 }
 
 func GetCurrentPath() (string, error) {
