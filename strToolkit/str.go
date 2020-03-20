@@ -94,24 +94,24 @@ func UnJson(str string, v interface{}) {
 	json.Unmarshal([]byte(str), v)
 }
 
-func CompareVersionLeftHigher(s1, s2 string) (bool, error) {
+func CompareVersion(s1, s2 string) (int, error) {
 	is1, e := versionToIntegers(s1)
 	if e != nil {
-		return false, e
+		return 0, e
 	}
 	is2, e := versionToIntegers(s2)
 	if e != nil {
-		return false, e
+		return 0, e
 	}
 	for i := 0; i < len(is1) && i < len(is2); i++ {
 		if is1[i] > is2[i] {
-			return true, nil
+			return 1, nil
 		}
 		if is1[i] < is2[i] {
-			return false, nil
+			return -1, nil
 		}
 	}
-	return false, nil
+	return 0, nil
 }
 func versionToIntegers(s string) ([]int, error) {
 	ss := strings.Split(s, ".")
