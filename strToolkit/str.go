@@ -1,8 +1,10 @@
 package strToolkit
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -177,4 +179,21 @@ func TrimEnd(s, trim string) string {
 
 func TrimBoth(s, trim string) string {
 	return TrimStart(TrimEnd(s, trim), trim)
+}
+
+func SubBetween(s string, start, end rune) (string, error) {
+	var buf *bytes.Buffer
+	for _, r := range s {
+		if r == start && buf == nil {
+			buf = bytes.NewBufferString("")
+			continue
+		}
+		if buf != nil {
+			if r == end {
+				return buf.String(), nil
+			}
+			buf.WriteRune(r)
+		}
+	}
+	return "", errors.New("no end " + string(end))
 }

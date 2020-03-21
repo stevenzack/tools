@@ -54,9 +54,21 @@ func TestTrimStart(t *testing.T) {
 }
 
 func TestTrimBoth(t *testing.T) {
-	s:=TrimBoth("749107", "7")
+	s := TrimBoth("749107", "7")
 	if s != `4910` {
 		t.Error("s is not `4910` , but ", s)
+		return
+	}
+}
+
+func TestSubBetween(t *testing.T) {
+	s, e := SubBetween(`windows: 'http://jywjl.gitee.io/binaries/jywjl_windows_v2.0.0.exe',`, '\'', '\'')
+	if e != nil {
+		t.Error(e)
+		return
+	}
+	if s != `http://jywjl.gitee.io/binaries/jywjl_windows_v2.0.0.exe` {
+		t.Error("s is not `http://jywjl.gitee.io/binaries/jywjl_windows_v2.0.0.exe` , but ", s)
 		return
 	}
 }
