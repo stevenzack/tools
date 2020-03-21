@@ -75,6 +75,11 @@ func GetCurrentPath() (string, error) {
 	return os.Getwd()
 }
 
+func OpenFileForWrite(path string) (*os.File, error) {
+	f, e := os.OpenFile(path, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	return f, e
+}
+
 func WriteFile(f string, b []byte) error {
 	dir := strToolkit.GetDirOfFile(f)
 	e := os.MkdirAll(dir, 0755)
