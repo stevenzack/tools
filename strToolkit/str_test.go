@@ -51,6 +51,11 @@ func TestTrimStart(t *testing.T) {
 		t.Error("s is not `` , but ", s)
 		return
 	}
+	s = TrimStart("ascdc", "a", "s")
+	if s != `cdc` {
+		t.Error("s is not `cdc` , but ", s)
+		return
+	}
 }
 
 func TestTrimBoth(t *testing.T) {
@@ -69,6 +74,14 @@ func TestSubBetween(t *testing.T) {
 	}
 	if s != `http://jywjl.gitee.io/binaries/jywjl_windows_v2.0.0.exe` {
 		t.Error("s is not `http://jywjl.gitee.io/binaries/jywjl_windows_v2.0.0.exe` , but ", s)
+		return
+	}
+}
+
+func TestTrimEnd(t *testing.T) {
+	s := TrimEnd("asdsa", "s", "a")
+	if s != `asd` {
+		t.Error("s is not `asd` , but ", s)
 		return
 	}
 }
