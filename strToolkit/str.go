@@ -18,7 +18,7 @@ func SplitHans(s string) string {
 	result := ""
 	for k, v := range rs {
 		str := string(v)
-		if IsChines(str) {
+		if IsChinese(v) {
 			result += str + " "
 			continue
 		}
@@ -26,19 +26,27 @@ func SplitHans(s string) string {
 			result += str
 		}
 		left, right := "", ""
-		if k != 0 && IsChines(string(rs[k-1])) {
+		if k != 0 && IsChinese(rs[k-1]) {
 			left = " "
 		}
-		if k != len(rs)-1 && IsChines(string(rs[k+1])) {
+		if k != len(rs)-1 && IsChinese(rs[k+1]) {
 			right = " "
 		}
 		result += left + str + right
 	}
 	return result
 }
-func IsChines(s string) bool {
+func IsChinese(r rune) bool {
 	var hzRegexp = regexp.MustCompile("^[\u4e00-\u9fa5]$")
-	return hzRegexp.MatchString(s)
+	return hzRegexp.MatchString(string(r))
+}
+func HasChinese(s string) bool {
+	for _, r := range s {
+		if IsChinese(r) {
+			return true
+		}
+	}
+	return false
 }
 func IsEnglish(r rune) bool {
 	if r >= 65 && r <= 90 || r >= 97 && r <= 122 {
