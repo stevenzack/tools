@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/StevenZack/tools/ioToolkit"
-
 	"github.com/StevenZack/tools/strToolkit"
 )
 
@@ -247,6 +246,7 @@ func DownloadFile(url, fdist string) error {
 		return e
 	}
 	defer rp.Body.Close()
+	os.MkdirAll(strToolkit.SubBeforeLast(fdist, string(os.PathSeparator), fdist), 0755)
 	f, e := os.OpenFile(fdist, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if e != nil {
 		return e
