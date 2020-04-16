@@ -43,3 +43,4 @@ func Log(is ...interface{}) {
 	args = append(args, is...)
 	fmt.Println(args...)
 }
+

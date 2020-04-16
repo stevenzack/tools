@@ -56,6 +56,11 @@ func TestTrimStart(t *testing.T) {
 		t.Error("s is not `cdc` , but ", s)
 		return
 	}
+	s = TrimStart(`/home/asd/go/src/gitee.com/jywjl/core/ws.go`, `/home/asd/go/src/gitee.com/jywjl/core/`)
+	if s != `ws.go` {
+		t.Error("s is not `ws.go` , but ", s)
+		return
+	}
 }
 
 func TestTrimBoth(t *testing.T) {

@@ -4,127 +4,114 @@ import (
 	"archive/zip"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/StevenZack/tools/strToolkit"
 )
 
-//压缩文件
-//files 文件数组，可以是不同dir下的文件或者文件夹
-//dest 压缩文件存放地址
-
-func CompressVerbosely(files []*os.File, dest string, callback func(string)) error {
-	d, e := os.Create(dest)
+func CompressFileTo(dst io.Writer, path string, progress func(offset, total int64)) error {
+	const bufSize = 32 * 1024
+	var total int64
+	info, e := os.Stat(path)
 	if e != nil {
 		return e
 	}
-	defer d.Close()
-	w := zip.NewWriter(d)
-	defer w.Close()
-	for _, file := range files {
-		err := compressWithName(file, "", w, callback)
-		if err != nil {
-			return err
+	if !info.IsDir() {
+		total = info.Size()
+		file, e := os.OpenFile(path, os.O_RDONLY, 0644)
+		if e != nil {
+			return e
 		}
-	}
-	return nil
-}
+		defer file.Close()
 
-func compressWithName(file *os.File, prefix string, zw *zip.Writer, callback func(string)) error {
-	info, err := file.Stat()
-	if err != nil {
-		return err
-	}
-	if info.IsDir() {
-		prefix = prefix + "/" + info.Name()
-		fileInfos, err := file.Readdir(-1)
-		if err != nil {
-			return err
+		zw := zip.NewWriter(dst)
+		defer zw.Close()
+		header, e := zip.FileInfoHeader(info)
+		if e != nil {
+			return e
 		}
-		for _, fi := range fileInfos {
-			f, err := os.Open(file.Name() + "/" + fi.Name())
-			if err != nil {
-				return err
+		writer, e := zw.CreateHeader(header)
+		if e != nil {
+			return e
+		}
+
+		buf := make([]byte, bufSize)
+		var offset int64
+		for {
+			n, e := file.Read(buf)
+			if e != nil {
+				if e == io.EOF {
+					break
+				}
+				return e
 			}
-			err = compressWithName(f, prefix, zw, callback)
-			if err != nil {
-				return err
+			_, e = writer.Write(buf[:n])
+			if e != nil {
+				return e
+			}
+			offset += int64(n)
+			if progress != nil {
+				progress(offset, total)
 			}
 		}
-	} else {
-		header, err := zip.FileInfoHeader(info)
-		header.Name = prefix + "/" + header.Name
-		if err != nil {
-			return err
-		}
-		writer, err := zw.CreateHeader(header)
-		if err != nil {
-			return err
-		}
-		_, err = io.Copy(writer, file)
-		file.Close()
-		if err != nil {
-			return err
-		}
-		if callback != nil {
-			callback(header.Name)
-		}
+		return nil
 	}
-	return nil
-}
-func Compress(files []*os.File, dest string) error {
-	d, e := os.OpenFile(dest, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+
+	e = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+		total += info.Size()
+		return nil
+	})
 	if e != nil {
 		return e
 	}
-	defer d.Close()
-	w := zip.NewWriter(d)
-	defer w.Close()
-	for _, file := range files {
-		err := compress(file, "", w)
-		if err != nil {
-			return err
+
+	zw := zip.NewWriter(dst)
+	defer zw.Close()
+	var offset int64
+	base := strToolkit.SubBeforeLast(strToolkit.Getunpath(path), string(os.PathSeparator), strToolkit.Getrpath(path)) + string(os.PathSeparator)
+
+	e = filepath.Walk(path, func(item string, info os.FileInfo, e error) error {
+		if info.IsDir() {
+			return nil
 		}
-	}
-	return nil
-}
-func compress(file *os.File, prefix string, zw *zip.Writer) error {
-	info, err := file.Stat()
-	if err != nil {
-		return err
-	}
-	if info.IsDir() {
-		prefix = prefix + "/" + info.Name()
-		fileInfos, err := file.Readdir(-1)
-		if err != nil {
-			return err
+		header, e := zip.FileInfoHeader(info)
+		if e != nil {
+			return e
 		}
-		for _, fi := range fileInfos {
-			f, err := os.Open(file.Name() + "/" + fi.Name())
-			if err != nil {
-				return err
+		header.Name = item[len(base):]
+		writer, e := zw.CreateHeader(header)
+		if e != nil {
+			return e
+		}
+		buf := make([]byte, 32*1024)
+		file, e := os.OpenFile(item, os.O_RDONLY, 0644)
+		if e != nil {
+			return e
+		}
+		defer file.Close()
+		for {
+			n, e := file.Read(buf)
+			if e != nil {
+				if e == io.EOF {
+					break
+				}
+				return e
 			}
-			err = compress(f, prefix, zw)
-			if err != nil {
-				return err
+			_, e = writer.Write(buf[:n])
+			if e != nil {
+				return e
+			}
+			offset += int64(n)
+			if progress != nil {
+				progress(offset, total)
 			}
 		}
-	} else {
-		header, err := zip.FileInfoHeader(info)
-		header.Name = prefix + "/" + header.Name
-		if err != nil {
-			return err
-		}
-		writer, err := zw.CreateHeader(header)
-		if err != nil {
-			return err
-		}
-		_, err = io.Copy(writer, file)
-		file.Close()
-		if err != nil {
-			return err
-		}
-	}
+		return nil
+	})
 	return nil
 }
 
