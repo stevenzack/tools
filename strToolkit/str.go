@@ -7,10 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/StevenZack/tools/numToolkit"
 )
 
 func SplitHans(s string) string {
@@ -77,7 +78,7 @@ func GetLast(s string) string {
 }
 
 func RandomPort() string {
-	p := rand.Intn(40000) + 10000
+	p := numToolkit.Randn(40000) + 10000
 	return strconv.Itoa(p)
 }
 func JsonArray(i interface{}) string {
