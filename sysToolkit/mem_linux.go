@@ -2,7 +2,7 @@ package sysToolkit
 
 import "syscall"
 
-// GetRAMSize returns total RAM size in kB
+// GetRAMSize returns total RAM size in bytes
 func GetRAMSize() (int64, error) {
 
 	// ~1kB garbage

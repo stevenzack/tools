@@ -13,7 +13,7 @@ import (
 	"github.com/StevenZack/tools/strToolkit"
 )
 
-// GetRAMSize returns total RAM size in kB
+// GetRAMSize returns total RAM size in bytes
 func GetRAMSize() (int64, error) {
 	cmd := exec.Command(`system_profiler`, `SPHardwareDataType`)
 	buf := new(bytes.Buffer)
@@ -44,11 +44,11 @@ func GetRAMSize() (int64, error) {
 			b := strToolkit.SubAfterLast(line, " ", line)
 			switch b {
 			case "G":
-				return size << 20, nil
+				return size << 30, nil
 			case "M":
-				return size << 10, nil
+				return size << 20, nil
 			case "K":
-				return size, nil
+				return size << 10, nil
 			default:
 				return 0, errors.New("bad bit unit:" + b)
 			}
