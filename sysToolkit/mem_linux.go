@@ -13,6 +13,6 @@ func GetRAMSize() (int64, error) {
 	if e != nil {
 		return 0, e
 	}
-	scale := 65536.0 // magic
+	// scale := 65536.0 // magic
 	return int64(si.Totalram), nil
 }
