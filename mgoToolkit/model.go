@@ -15,14 +15,20 @@ import (
 
 type BaseModel struct {
 	DataSourceName string //data source name
-	Coll           string // collection name
+	CollectionName string // collection name
 	Type           reflect.Type
 	Data           interface{}
+	Collection     *mongo.Collection
 }
 
 func NewBaseModel(dsn string, data interface{}) (*BaseModel, error) {
 	model := &BaseModel{DataSourceName: dsn}
 	e := model.initData(data)
+	if e != nil {
+		log.Println(e)
+		return nil, e
+	}
+	model.Collection, e = model.takeCollection()
 	if e != nil {
 		log.Println(e)
 		return nil, e
@@ -33,7 +39,7 @@ func NewBaseModel(dsn string, data interface{}) (*BaseModel, error) {
 func (b *BaseModel) initData(data interface{}) error {
 	t := reflect.TypeOf(data)
 	b.Type = t
-	b.Coll = strToolkit.LowerFirst(t.Name())
+	b.CollectionName = strToolkit.LowerFirst(t.Name())
 
 	if t.Kind().String() == "ptr" {
 		return errors.New("data必须是非指针类型")
@@ -61,7 +67,7 @@ func (b *BaseModel) initData(data interface{}) error {
 		log.Println(e)
 		return e
 	}
-	e = CreateIndexIfNotExists(db, b.Coll, indexes)
+	e = CreateIndexIfNotExists(db, b.CollectionName, indexes)
 	if e != nil {
 		log.Println(e)
 		return e
@@ -69,13 +75,13 @@ func (b *BaseModel) initData(data interface{}) error {
 	return nil
 }
 
-func (b *BaseModel) TakeCollection() (*mongo.Collection, error) {
+func (b *BaseModel) takeCollection() (*mongo.Collection, error) {
 	db, e := TakeDatabase(b.DataSourceName)
 	if e != nil {
 		log.Println(e)
 		return nil, e
 	}
-	return db.Collection(b.Coll), nil
+	return db.Collection(b.CollectionName), nil
 }
 
 func (b *BaseModel) Insert(v interface{}) error {
@@ -98,7 +104,7 @@ func (b *BaseModel) Insert(v interface{}) error {
 		value.Field(0).Set(reflect.ValueOf(primitive.NewObjectID()))
 	}
 
-	coll, e := b.TakeCollection()
+	coll, e := b.takeCollection()
 	if e != nil {
 		log.Println(e)
 		return e
@@ -112,14 +118,14 @@ func (b *BaseModel) Insert(v interface{}) error {
 	return nil
 }
 
-func (b *BaseModel) FindByID(id string) (interface{}, error) {
+func (b *BaseModel) Find(id string) (interface{}, error) {
 	objId, e := primitive.ObjectIDFromHex(id)
 	if e != nil {
 		log.Println(e)
 		return nil, e
 	}
 
-	coll, e := b.TakeCollection()
+	coll, e := b.takeCollection()
 	if e != nil {
 		log.Println(e)
 		return nil, e
@@ -135,14 +141,14 @@ func (b *BaseModel) FindByID(id string) (interface{}, error) {
 	return v.Interface(), nil
 }
 
-func (b *BaseModel) UpdateByID(id string, updater bson.M) (int64, error) {
+func (b *BaseModel) Update(id string, updater bson.M) (int64, error) {
 	objId, e := primitive.ObjectIDFromHex(id)
 	if e != nil {
 		log.Println(e)
 		return 0, e
 	}
 
-	coll, e := b.TakeCollection()
+	coll, e := b.takeCollection()
 	if e != nil {
 		log.Println(e)
 		return 0, e
