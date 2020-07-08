@@ -172,46 +172,22 @@ func SubAfterLast(s, sep, def string) string {
 	return def
 }
 
-func TrimStart(s string, trims ...string) string {
-	for i := 0; i < len(s); i++ {
-		var trimmable bool
-		for _, trim := range trims {
-			if len(trim) > len(s)-i {
-				continue
-			}
-			if trim == s[i:i+len(trim)] {
-				trimmable = true
-				break
-			}
-		}
-		if !trimmable {
-			return s[i:]
-		}
+func TrimStart(s string, trim string) string {
+	if strings.HasPrefix(s, trim) {
+		return s[len(trim):]
 	}
 	return s
 }
 
-func TrimEnd(s string, trims ...string) string {
-	for i := len(s) - 1; i > -1; i-- {
-		var trimmable bool
-		for _, trim := range trims {
-			if len(trim) > i {
-				continue
-			}
-			if trim == s[i-len(trim):i] {
-				trimmable = true
-				break
-			}
-		}
-		if !trimmable {
-			return s[:i]
-		}
+func TrimEnd(s string, trim string) string {
+	if strings.HasSuffix(s, trim) {
+		return s[:len(s)-len(trim)]
 	}
 	return s
 }
 
-func TrimBoth(s string, trims ...string) string {
-	return TrimStart(TrimEnd(s, trims...), trims...)
+func TrimBoth(s string, trims string) string {
+	return TrimStart(TrimEnd(s, trims), trims)
 }
 
 func SubBetween(s string, start, end rune) (string, error) {
