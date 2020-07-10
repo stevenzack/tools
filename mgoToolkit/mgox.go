@@ -43,6 +43,9 @@ func CreateIndex(coll *mongo.Collection, indexes map[string]int) error {
 		}
 		imodels = append(imodels, imodel)
 	}
+	if len(imodels)==0{
+		return nil
+	}
 
 	_, e := coll.Indexes().CreateMany(context.TODO(), imodels)
 	return e

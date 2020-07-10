@@ -45,10 +45,6 @@ func (b *BaseModel) initData(data interface{}) error {
 		return errors.New("data必须是非指针类型")
 	}
 
-	if t.Field(0).Type.Name() != "ObjectID" {
-		return errors.New(t.Name() + "类型的第一个字段不是primitive.ObjectID类型")
-	}
-
 	indexes := map[string]int{}
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
@@ -118,13 +114,7 @@ func (b *BaseModel) Insert(v interface{}) error {
 	return nil
 }
 
-func (b *BaseModel) Find(id string) (interface{}, error) {
-	objId, e := primitive.ObjectIDFromHex(id)
-	if e != nil {
-		log.Println(e)
-		return nil, e
-	}
-
+func (b *BaseModel) Find(id interface{}) (interface{}, error) {
 	coll, e := b.takeCollection()
 	if e != nil {
 		log.Println(e)
@@ -132,7 +122,7 @@ func (b *BaseModel) Find(id string) (interface{}, error) {
 	}
 
 	v := reflect.New(b.Type)
-	e = coll.FindOne(context.TODO(), bson.M{"_id": objId}).Decode(v.Interface())
+	e = coll.FindOne(context.TODO(), bson.M{"_id": id}).Decode(v.Interface())
 	if e != nil {
 		log.Println(e)
 		return nil, e
@@ -141,12 +131,7 @@ func (b *BaseModel) Find(id string) (interface{}, error) {
 	return v.Interface(), nil
 }
 
-func (b *BaseModel) Update(id string, updater bson.M) (int64, error) {
-	objId, e := primitive.ObjectIDFromHex(id)
-	if e != nil {
-		log.Println(e)
-		return 0, e
-	}
+func (b *BaseModel) Update(id interface{}, updater bson.M) (int64, error) {
 
 	coll, e := b.takeCollection()
 	if e != nil {
@@ -154,7 +139,7 @@ func (b *BaseModel) Update(id string, updater bson.M) (int64, error) {
 		return 0, e
 	}
 
-	l, e := coll.UpdateOne(context.TODO(), bson.M{"_id": objId}, bson.M{
+	l, e := coll.UpdateOne(context.TODO(), bson.M{"_id": id}, bson.M{
 		"$set": updater,
 	})
 	if e != nil {
