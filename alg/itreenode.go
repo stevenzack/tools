@@ -2,6 +2,7 @@ package alg
 
 import (
 	"fmt"
+	"strings"
 )
 
 type ITreeNode interface {
@@ -45,5 +46,7 @@ func PrintTree(root ITreeNode) {
 			ss = append(ss, []string{})
 		}
 	}
-
+	for _, s := range ss {
+		fmt.Println(strings.Join(s, ","))
+	}
 }

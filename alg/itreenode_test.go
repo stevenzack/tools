@@ -3,16 +3,17 @@ package alg
 import "testing"
 
 func TestPrintTree(t *testing.T) {
-	tree := Node("1",
-		Node("2",
-			Node("3"),
-			Node("4"),
+	PrintTree(NewSNode("1",
+		NewSNode("2",
+			NewSNode("4",
+				NewSNode("5"),
+				NewSNode("6"),
+			),
 		),
-		Node("5",
-			Node("6"),
-			Node("7",
-				Node("8")),
+		NewSNode("3",
+			NewSNode("7",
+				NewSNode("8"),
+			),
 		),
-	)
-	PrintTree(tree)
+	))
 }
