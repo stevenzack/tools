@@ -1,6 +1,8 @@
 package alg
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type ITreeNode interface {
 	Child(i int) ITreeNode
@@ -19,13 +21,14 @@ const (
 
 func PrintTree(root ITreeNode) {
 	q := []ITreeNode{root, nil}
-	for len(q) > 0 {
+	ss := [][]string{[]string{}}
+	for level := 0; len(q) > 0; {
 		p := q[0]
 		q = q[1:]
 		if p == nil {
 			continue
 		}
-		fmt.Print(p.String())
+		ss[level] = append(ss[level], p.String())
 
 		for i := 0; i < p.ChildNum(); i++ {
 			n := p.Child(i)
@@ -38,6 +41,9 @@ func PrintTree(root ITreeNode) {
 			fmt.Println("")
 			q = q[1:]
 			q = append(q, nil)
+			level++
+			ss = append(ss, []string{})
 		}
 	}
+
 }

@@ -5,7 +5,7 @@ type SNode struct {
 	Children []*SNode
 }
 
-func Node(v string, children ...*SNode) *SNode {
+func NewSNode(v string, children ...*SNode) *SNode {
 	return &SNode{
 		Value:    v,
 		Children: children,
