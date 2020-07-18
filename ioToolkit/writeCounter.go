@@ -3,18 +3,20 @@ package ioToolkit
 import "time"
 
 type WriteCounter struct {
-	Total      uint64
-	LastSecond int
-	OnProgress func(i uint64)
+	Step, Total uint64
+	LastSecond  int
+	OnProgress  func(i uint64)
 }
 
 func (f *WriteCounter) Write(p []byte) (int, error) {
 	n := len(p)
-	f.Total += uint64(n)
+	f.Step += uint64(n)
 	second := time.Now().Second()
 	if f.OnProgress != nil && second != f.LastSecond {
-		f.OnProgress(f.Total)
+		f.OnProgress(f.Step)
 		f.LastSecond = second
+	} else if f.Total > 0 && f.Step >= f.Total {
+		f.OnProgress(f.Step)
 	}
 	return n, nil
 }

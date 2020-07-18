@@ -405,9 +405,11 @@ func DownloadFileWithProgress(url, dst string, onProgress func(rcv, total uint64
 	}
 	defer fo.Close()
 
-	wc := &ioToolkit.WriteCounter{}
-	wc.OnProgress = func(i uint64) {
-		onProgress(i, length)
+	wc := &ioToolkit.WriteCounter{
+		OnProgress: func(i uint64) {
+			onProgress(i, length)
+		},
+		Total: length,
 	}
 	_, e = io.Copy(fo, io.TeeReader(rp.Body, wc))
 	if e != nil {
