@@ -3,6 +3,7 @@ package compressToolkit
 import (
 	"archive/zip"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -117,37 +118,40 @@ func CompressFileTo(dst io.Writer, path string, progress func(offset, total int6
 
 //解压
 func DeCompress(zipFile, dest string) error {
-	reader, err := zip.OpenReader(zipFile)
-	if err != nil {
-		return err
+	reader, e := zip.OpenReader(zipFile)
+	if e != nil {
+		log.Println(e)
+		return e
 	}
 	defer reader.Close()
 	for _, file := range reader.File {
 		filename := strToolkit.Getrpath(dest) + file.Name
-		rc, err := file.Open()
-		if err != nil {
-			return err
+		rc, e := file.Open()
+		if e != nil {
+			log.Println(e)
+			return e
 		}
 		defer rc.Close()
 		if file.FileInfo().IsDir() {
 			os.MkdirAll(filename, 0755)
 			continue
 		}
-		err = os.MkdirAll(getDir(filename), 0755)
-		if err != nil {
-			return err
+		e = os.MkdirAll(getDir(filename), 0755)
+		if e != nil {
+			log.Println(e)
+			return e
 		}
-		w, err := os.Create(filename)
-		if err != nil {
-			return err
+		w, e := os.Create(filename)
+		if e != nil {
+			log.Println(e)
+			return e
 		}
 		defer w.Close()
-		_, err = io.Copy(w, rc)
-		if err != nil {
-			return err
+		_, e = io.Copy(w, rc)
+		if e != nil {
+			log.Println(e)
+			return e
 		}
-		w.Close()
-		rc.Close()
 	}
 	return nil
 }

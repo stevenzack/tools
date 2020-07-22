@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/StevenZack/tools/ioToolkit"
 	"github.com/StevenZack/tools/strToolkit"
 )
 
@@ -370,7 +369,59 @@ func DoJSONRequest(url string, i interface{}) (string, error) {
 	return string(back), nil
 }
 
-func DownloadFileWithProgress(url, dst string, onProgress func(rcv, total uint64)) error {
+func DownloadFileUnknownSize(url, dst string, onProgress func(rcv uint64) bool) error {
+	rp, e := http.Get(url)
+	if e != nil {
+		return e
+	}
+	defer rp.Body.Close()
+
+	if rp.StatusCode != 200 {
+		b, e := ioutil.ReadAll(rp.Body)
+		if e != nil {
+			return e
+		}
+		return errors.New(rp.Status + ":" + string(b))
+	}
+
+	fo, e := os.OpenFile(dst, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	if e != nil {
+		return e
+	}
+	defer fo.Close()
+	b := make([]byte, 10240)
+	lastSecond := time.Now().Second()
+	var readn uint64
+	for {
+		n, e := rp.Body.Read(b)
+		if e != nil {
+			if e == io.EOF {
+				break
+			}
+			return e
+		}
+		_, e = fo.Write(b[:n])
+		if e != nil {
+			return e
+		}
+		readn += uint64(n)
+		if lastSecond == time.Now().Second() {
+			continue
+		}
+		if onProgress != nil {
+			if onProgress(readn) {
+				return nil
+			}
+		}
+	}
+	if onProgress != nil {
+		onProgress(readn)
+	}
+	return nil
+}
+
+
+func DownloadFileWithProgress(url, dst string, onProgress func(rcv, total uint64) bool) error {
 	rp, e := http.Get(url)
 	if e != nil {
 		return e
@@ -405,17 +456,38 @@ func DownloadFileWithProgress(url, dst string, onProgress func(rcv, total uint64
 	}
 	defer fo.Close()
 
-	wc := &ioToolkit.WriteCounter{
-		OnProgress: func(i uint64) {
-			onProgress(i, length)
-		},
-		Total: length,
-	}
-	_, e = io.Copy(fo, io.TeeReader(rp.Body, wc))
-	if e != nil {
-		return e
+	b := make([]byte, 10240)
+	lastSecond := time.Now().Second()
+	var readn uint64
+	for {
+		n, e := rp.Body.Read(b)
+		if e != nil {
+			if e == io.EOF {
+				break
+			}
+			return e
+		}
+		_, e = fo.Write(b[:n])
+		if e != nil {
+			return e
+		}
+		readn += uint64(n)
+		if lastSecond == time.Now().Second() {
+			continue
+		}
+
+		if onProgress != nil {
+			if onProgress(readn, length) {
+				return nil
+			}
+		}
 	}
 
+	if onProgress != nil {
+		if onProgress(length, length) {
+			return nil
+		}
+	}
 	return nil
 }
 

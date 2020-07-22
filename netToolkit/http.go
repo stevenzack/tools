@@ -1,6 +1,7 @@
 package netToolkit
 
 import (
+	"bufio"
 	"bytes"
 	"io"
 	"log"
@@ -10,6 +11,7 @@ import (
 	urlkit "net/url"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/StevenZack/tools/strToolkit"
 )
@@ -84,7 +86,7 @@ func PostMultipartFiles(rawUrl string, headers map[string]string, m map[string][
 	cli := http.Client{}
 	return cli.Do(r)
 }
-func PostMultipartFilesTCP(rawUrl string, headers map[string]string, m map[string][]string) (*http.Response, error) {
+func PostMultipartFilesTCP(rawUrl string, headers map[string]string, m map[string][]string, onProgress func(sent, total int64) bool) (*http.Response, error) {
 	url, e := urlkit.Parse(rawUrl)
 	if e != nil {
 		return nil, e
@@ -110,7 +112,7 @@ func PostMultipartFilesTCP(rawUrl string, headers map[string]string, m map[strin
 	for k, v := range headers {
 		conn.Write([]byte(k + ": " + v + "\r\n"))
 	}
-	var length int
+	var length int64
 	for k, paths := range m {
 		for _, path := range paths {
 			info, e := os.Stat(path)
@@ -118,13 +120,15 @@ func PostMultipartFilesTCP(rawUrl string, headers map[string]string, m map[strin
 				log.Println(e)
 				return nil, e
 			}
-			length += len("--"+w.Boundary()+"\r\nContent-Disposition: form-data; name=\""+k+"\"; filename=\""+info.Name()+"\"\r\nContent-Type: application/octet-stream\r\n\r\n\r\n") + int(info.Size())
+			length += int64(len("--"+w.Boundary()+"\r\nContent-Disposition: form-data; name=\""+k+"\"; filename=\""+info.Name()+"\"\r\nContent-Type: application/octet-stream\r\n\r\n\r\n") + int(info.Size()))
 		}
 	}
-	length += len("--" + w.Boundary() + "\r\n")
-	conn.Write([]byte("Content-Length: " + strconv.Itoa(length) + "\r\n"))
+	length += int64(len("--" + w.Boundary() + "\r\n"))
+	conn.Write([]byte("Content-Length: " + strconv.FormatInt(length, 10) + "\r\n"))
 	conn.Write([]byte("Content-Type: multipart/form-data; boundary=" + w.Boundary() + "\r\n\r\n"))
 
+	var sent int64
+	lastSecond := time.Now().Second()
 	for k, paths := range m {
 		for _, path := range paths {
 			fi, e := os.OpenFile(path, os.O_RDONLY, 0644)
@@ -138,13 +142,44 @@ func PostMultipartFilesTCP(rawUrl string, headers map[string]string, m map[strin
 				return nil, e
 			}
 			fo, e := w.CreateFormFile(k, info.Name())
-			_, e = io.Copy(fo, fi)
-			if e != nil {
-				log.Println(e)
-				return nil, e
+
+			b := make([]byte, 10240)
+			for {
+				n, e := fi.Read(b)
+				if e != nil {
+					if e == io.EOF {
+						break
+					}
+					log.Println(e)
+					return nil, e
+				}
+				_, e = fo.Write(b[:n])
+				if e != nil {
+					log.Println(e)
+					return nil, e
+				}
+				sent += int64(n)
+				if lastSecond == time.Now().Second() {
+					continue
+				}
+				lastSecond = time.Now().Second()
+				if onProgress != nil {
+					if onProgress(sent, length) {
+						return nil, nil
+					}
+				}
 			}
 		}
 	}
 	conn.Write([]byte("\r\n--" + w.Boundary() + "\r\n"))
-	return nil, nil
+	if onProgress != nil {
+		onProgress(length, length)
+	}
+
+	rp, e := http.ReadResponse(bufio.NewReader(conn), nil)
+	if e != nil {
+		log.Println(e)
+		return nil, e
+	}
+	return rp, nil
 }
