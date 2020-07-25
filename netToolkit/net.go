@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"mime/multipart"
 	"net"
@@ -420,8 +421,17 @@ func DownloadFileUnknownSize(url, dst string, onProgress func(rcv uint64) bool) 
 	return nil
 }
 
-
-func DownloadFileWithProgress(url, dst string, onProgress func(rcv, total uint64) bool) error {
+func DownloadFileWithProgress(url string, header map[string]string, dst string, onProgress func(rcv, total uint64) bool) error {
+	r, e := http.NewRequest(http.MethodGet, url, nil)
+	if e != nil {
+		log.Println(e)
+		return e
+	}
+	if header != nil {
+		for k, v := range header {
+			r.Header.Add(k, v)
+		}
+	}
 	rp, e := http.Get(url)
 	if e != nil {
 		return e
