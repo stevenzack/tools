@@ -39,7 +39,7 @@ func NewBaseModel(dsn string, data interface{}) (*BaseModel, error) {
 func (b *BaseModel) initData(data interface{}) error {
 	t := reflect.TypeOf(data)
 	b.Type = t
-	b.CollectionName = strToolkit.LowerFirst(t.Name())
+	b.CollectionName = strToolkit.ToLowerCamel(t.Name())
 
 	if t.Kind().String() == "ptr" {
 		return errors.New("data必须是非指针类型")
