@@ -1,5 +1,14 @@
 package strToolkit
 
+import (
+	"regexp"
+	"strings"
+)
+
+var uppercaseAcronym = map[string]bool{
+	"ID": true,
+}
+
 func IsUpperCase(r rune) bool {
 	if r >= 'A' && r <= 'Z' {
 		return true
@@ -14,94 +23,145 @@ func IsLowerCase(r rune) bool {
 	return false
 }
 
-func ToSnakeCase(s string) string {
-	out := []rune{}
-	for index, r := range s {
-		if index == 0 {
-			out = append(out, ToLowerCase(r))
-			continue
+// Converts a string to CamelCase
+func toCamelInitCase(s string, initCase bool) string {
+	s = addWordBoundariesToNumbers(s)
+	s = strings.Trim(s, " ")
+	n := ""
+	capNext := initCase
+	for _, v := range s {
+		if v >= 'A' && v <= 'Z' {
+			n += string(v)
 		}
-
-		if IsUpperCase(r) && index != 0 {
-			if IsLowerCase(rune(s[index-1])) {
-				out = append(out, '_', ToLowerCase(r))
-				continue
+		if v >= '0' && v <= '9' {
+			n += string(v)
+		}
+		if v >= 'a' && v <= 'z' {
+			if capNext {
+				n += strings.ToUpper(string(v))
+			} else {
+				n += string(v)
 			}
-			if index<len(s)-1&&IsLowerCase(rune(s[index+1])){
-				out=append(out, '_',ToLowerCase(r))
-				continue
-			}
-			out = append(out, ToLowerCase(r))
-			continue
 		}
-		out = append(out, r)
-	}
-	return string(out)
-}
-
-func ToCamelCase(s string) string {
-	s = ToLower(s)
-	out := []rune{}
-	for index, r := range s {
-		if r == '_' {
-			continue
+		if v == '_' || v == ' ' || v == '-' || v == '.' {
+			capNext = true
+		} else {
+			capNext = false
 		}
-		if index == 0 {
-			out = append(out, ToUpperCase(r))
-			continue
-		}
-
-		if index > 0 && s[index-1] == '_' {
-			out = append(out, ToUpperCase(r))
-			continue
-		}
-
-		out = append(out, r)
 	}
-	return string(out)
+	return n
 }
 
-func ToLowerCase(r rune) rune {
-	dx := 'A' - 'a'
-	if IsUpperCase(r) {
-		return r - dx
+// ToCamel converts a string to CamelCase
+func ToCamel(s string) string {
+	if uppercaseAcronym[s] {
+		s = strings.ToLower(s)
 	}
-	return r
-}
-func ToUpperCase(r rune) rune {
-	dx := 'A' - 'a'
-	if IsLowerCase(r) {
-		return r + dx
-	}
-	return r
+	return toCamelInitCase(s, true)
 }
 
-func ToLower(s string) string {
-	out := []rune{}
-	for _, r := range s {
-		out = append(out, ToLowerCase(r))
-	}
-	return string(out)
-}
-
-func ToUpper(s string) string {
-	out := []rune{}
-	for _, r := range s {
-		out = append(out, ToUpperCase(r))
-	}
-	return string(out)
-}
-
-func LowerFirst(s string) string {
-	if len(s) == 0 {
+// ToLowerCamel converts a string to lowerCamelCase
+func ToLowerCamel(s string) string {
+	if s == "" {
 		return s
 	}
-	return ToLower(s[:1]) + s[1:]
+	if uppercaseAcronym[s] {
+		s = strings.ToLower(s)
+	}
+	if r := rune(s[0]); r >= 'A' && r <= 'Z' {
+		s = strings.ToLower(string(r)) + s[1:]
+	}
+	return toCamelInitCase(s, false)
 }
 
-func UpperFirst(s string) string {
-	if len(s) == 0 {
-		return s
+// ToSnake converts a string to snake_case
+func ToSnake(s string) string {
+
+	return ToDelimited(s, '_')
+}
+func ToSnakeWithIgnore(s string, ignore uint8) string {
+
+	return ToScreamingDelimited(s, '_', ignore, false)
+}
+
+// ToScreamingSnake converts a string to SCREAMING_SNAKE_CASE
+func ToScreamingSnake(s string) string {
+	return ToScreamingDelimited(s, '_', 0, true)
+}
+
+// ToKebab converts a string to kebab-case
+func ToKebab(s string) string {
+	return ToDelimited(s, '-')
+}
+
+// ToScreamingKebab converts a string to SCREAMING-KEBAB-CASE
+func ToScreamingKebab(s string) string {
+	return ToScreamingDelimited(s, '-', 0, true)
+}
+
+// ToDelimited converts a string to delimited.snake.case
+// (in this case `delimiter = '.'`)
+func ToDelimited(s string, delimiter uint8) string {
+	return ToScreamingDelimited(s, delimiter, 0, false)
+}
+
+// ToScreamingDelimited converts a string to SCREAMING.DELIMITED.SNAKE.CASE
+// (in this case `delimiter = '.'; screaming = true`)
+// or delimited.snake.case
+// (in this case `delimiter = '.'; screaming = false`)
+func ToScreamingDelimited(s string, delimiter uint8, ignore uint8, screaming bool) string {
+	s = addWordBoundariesToNumbers(s)
+	s = strings.Trim(s, " ")
+	n := ""
+	for i, v := range s {
+		// treat acronyms as words, eg for JSONData -> JSON is a whole word
+		nextCaseIsChanged := false
+		if i+1 < len(s) {
+			next := s[i+1]
+			vIsCap := v >= 'A' && v <= 'Z'
+			vIsLow := v >= 'a' && v <= 'z'
+			nextIsCap := next >= 'A' && next <= 'Z'
+			nextIsLow := next >= 'a' && next <= 'z'
+			if (vIsCap && nextIsLow) || (vIsLow && nextIsCap) {
+				nextCaseIsChanged = true
+			}
+			if ignore > 0 && i-1 >= 0 && s[i-1] == ignore && nextCaseIsChanged {
+				nextCaseIsChanged = false
+			}
+		}
+
+		if i > 0 && n[len(n)-1] != delimiter && nextCaseIsChanged {
+			// add underscore if next letter case type is changed
+			if v >= 'A' && v <= 'Z' {
+				n += string(delimiter) + string(v)
+			} else if v >= 'a' && v <= 'z' {
+				n += string(v) + string(delimiter)
+			}
+		} else if v == ' ' || v == '_' || v == '-' {
+			// replace spaces/underscores with delimiters
+			if uint8(v) == ignore {
+				n += string(v)
+			} else {
+				n += string(delimiter)
+			}
+		} else {
+			n = n + string(v)
+		}
 	}
-	return ToUpper(s[:1]) + s[1:]
+
+	if screaming {
+		n = strings.ToUpper(n)
+	} else {
+		n = strings.ToLower(n)
+	}
+	return n
+}
+
+var numberSequence = regexp.MustCompile(`([a-zA-Z])(\d+)([a-zA-Z]?)`)
+var numberReplacement = []byte(`$1 $2 $3`)
+
+func addWordBoundariesToNumbers(s string) string {
+	b := []byte(s)
+	b = numberSequence.ReplaceAll(b, numberReplacement)
+	return string(b)
 }
