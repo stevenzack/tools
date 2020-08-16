@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -15,7 +16,9 @@ var clientPool = sync.Map{}
 func TakeClient(dsn string) (*mongo.Client, error) {
 	v, ok := clientPool.Load(dsn)
 	if !ok {
-		mgo, e := mongo.Connect(context.TODO(), options.Client().ApplyURI(dsn))
+		ctx,cancel:=context.WithTimeout(context.Background(),time.Second*5)
+		defer cancel()
+		mgo, e := mongo.Connect(ctx, options.Client().ApplyURI(dsn))
 		if e != nil {
 			log.Println(e)
 			return nil, e
