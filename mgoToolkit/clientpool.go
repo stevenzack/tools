@@ -3,6 +3,7 @@ package mgoToolkit
 import (
 	"context"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,19 +12,24 @@ import (
 	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 )
 
-var clientPool = sync.Map{}
+var (
+	pool     = sync.Map{}
+	poolLock = sync.Mutex{}
+)
 
 func TakeClient(dsn string) (*mongo.Client, error) {
-	v, ok := clientPool.Load(dsn)
+	poolLock.Lock()
+	defer poolLock.Unlock()
+	v, ok := pool.Load(dsn)
 	if !ok {
-		ctx,cancel:=context.WithTimeout(context.Background(),time.Second*5)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 		defer cancel()
 		mgo, e := mongo.Connect(ctx, options.Client().ApplyURI(dsn))
 		if e != nil {
 			log.Println(e)
 			return nil, e
 		}
-		clientPool.Store(dsn, mgo)
+		pool.Store(dsn, mgo)
 		return mgo, nil
 	}
 	return v.(*mongo.Client), nil
@@ -35,7 +41,8 @@ func TakeDatabase(dsn string) (*mongo.Database, error) {
 		log.Println(e)
 		return nil, e
 	}
-	client, e := TakeClient(dsn)
+
+	client, e := TakeClient(strings.Replace(dsn, "/"+info.Database, "/admin", len("mongodb://")))
 	if e != nil {
 		log.Println(e)
 		return nil, e

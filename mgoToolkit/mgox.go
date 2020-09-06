@@ -1,12 +1,12 @@
 package mgoToolkit
 
+
 import (
 	"context"
 
-	"go.mongodb.org/mongo-driver/x/bsonx"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
 // DialCollection DialCollection
@@ -43,7 +43,7 @@ func CreateIndex(coll *mongo.Collection, indexes map[string]int) error {
 		}
 		imodels = append(imodels, imodel)
 	}
-	if len(imodels)==0{
+	if len(imodels) == 0 {
 		return nil
 	}
 
@@ -52,16 +52,16 @@ func CreateIndex(coll *mongo.Collection, indexes map[string]int) error {
 }
 
 // CreateIndexIfNotExists create indexes if collection doesn't exists
-func CreateIndexIfNotExists(db *mongo.Database, collname string, indexes map[string]int) error {
+func CreateIndexIfNotExists(db *mongo.Database, collname string, indexes map[string]int) (bool, error) {
 	b, e := CollectionExists(db, collname)
 	if e != nil {
-		return e
+		return false, e
 	}
 	if b {
-		return nil
+		return false, nil
 	}
 
 	coll := DialCollection(db, collname)
 
-	return CreateIndex(coll, indexes)
+	return true, CreateIndex(coll, indexes)
 }

@@ -3,11 +3,9 @@ package mgoToolkit
 import (
 	"context"
 	"errors"
-	"log"
 	"reflect"
 
-	"github.com/StevenZack/tools/strToolkit"
-
+	"github.com/iancoleman/strcase"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -22,27 +20,31 @@ type BaseModel struct {
 }
 
 func NewBaseModel(dsn string, data interface{}) (*BaseModel, error) {
+	model, _, e := NewBaseModelWithCreated(dsn, data)
+	return model, e
+}
+
+func NewBaseModelWithCreated(dsn string, data interface{}) (*BaseModel, bool, error) {
 	model := &BaseModel{DataSourceName: dsn}
-	e := model.initData(data)
+	created, e := model.initData(data)
 	if e != nil {
-		log.Println(e)
-		return nil, e
+		return nil, false, e
 	}
 	model.Collection, e = model.takeCollection()
 	if e != nil {
-		log.Println(e)
-		return nil, e
+		return nil, false, e
 	}
-	return model, nil
+
+	return model, created, nil
 }
 
-func (b *BaseModel) initData(data interface{}) error {
+func (b *BaseModel) initData(data interface{}) (bool, error) {
 	t := reflect.TypeOf(data)
 	b.Type = t
-	b.CollectionName = strToolkit.ToLowerCamel(t.Name())
+	b.CollectionName = strcase.ToLowerCamel(t.Name())
 
 	if t.Kind().String() == "ptr" {
-		return errors.New("data必须是非指针类型")
+		return false, errors.New("data必须是非指针类型")
 	}
 
 	indexes := map[string]int{}
@@ -50,7 +52,7 @@ func (b *BaseModel) initData(data interface{}) error {
 		field := t.Field(i)
 		bson, ok := field.Tag.Lookup("bson")
 		if !ok {
-			return errors.New(t.Name() + "类型的" + field.Name + "字段没有加bson的tag")
+			return false, errors.New(t.Name() + "类型的" + field.Name + "字段没有加bson的tag")
 		}
 
 		if _, ok := field.Tag.Lookup("index"); ok || bson == "createTime" {
@@ -60,27 +62,24 @@ func (b *BaseModel) initData(data interface{}) error {
 
 	db, e := TakeDatabase(b.DataSourceName)
 	if e != nil {
-		log.Println(e)
-		return e
+		return false, e
 	}
-	e = CreateIndexIfNotExists(db, b.CollectionName, indexes)
+	created, e := CreateIndexIfNotExists(db, b.CollectionName, indexes)
 	if e != nil {
-		log.Println(e)
-		return e
+		return false, e
 	}
-	return nil
+	return created, nil
 }
 
 func (b *BaseModel) takeCollection() (*mongo.Collection, error) {
 	db, e := TakeDatabase(b.DataSourceName)
 	if e != nil {
-		log.Println(e)
 		return nil, e
 	}
 	return db.Collection(b.CollectionName), nil
 }
 
-func (b *BaseModel) Insert(v interface{}) error {
+func (b *BaseModel) Insert(v interface{}) (string, error) {
 	t := reflect.TypeOf(v)
 	value := reflect.ValueOf(v)
 	if t.Kind().String() == "ptr" {
@@ -88,63 +87,106 @@ func (b *BaseModel) Insert(v interface{}) error {
 		value = value.Elem()
 	}
 	if t.Name() != b.Type.Name() {
-		return errors.New("插入的数据不是" + b.Type.Name() + "类型")
-	}
-
-	objValue := value.Field(0).Interface()
-	objId, ok := objValue.(primitive.ObjectID)
-	if !ok {
-		return errors.New("插入的数据的第一个值不是primitive.ObjectID类型")
-	}
-	if objId == primitive.NilObjectID {
-		value.Field(0).Set(reflect.ValueOf(primitive.NewObjectID()))
+		return "", errors.New("插入的数据不是" + b.Type.Name() + "类型")
 	}
 
 	coll, e := b.takeCollection()
 	if e != nil {
-		log.Println(e)
-		return e
+		return "", e
 	}
 
-	_, e = coll.InsertOne(context.TODO(), v)
+	result, e := coll.InsertOne(context.TODO(), v)
 	if e != nil {
-		log.Println(e)
-		return e
+		return "", e
 	}
-	return nil
+	return result.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
-func (b *BaseModel) Find(id interface{}) (interface{}, error) {
+func (b *BaseModel) Find(id string) (interface{}, error) {
 	coll, e := b.takeCollection()
 	if e != nil {
-		log.Println(e)
 		return nil, e
 	}
 
-	v := reflect.New(b.Type)
-	e = coll.FindOne(context.TODO(), bson.M{"_id": id}).Decode(v.Interface())
+	obj, e := primitive.ObjectIDFromHex(id)
 	if e != nil {
-		log.Println(e)
+		return nil, errors.New(e.Error() + ":" + id)
+	}
+	v := reflect.New(b.Type)
+	e = coll.FindOne(context.TODO(), bson.M{"_id": obj}).Decode(v.Interface())
+	if e != nil {
 		return nil, e
 	}
 
 	return v.Interface(), nil
 }
 
-func (b *BaseModel) Update(id interface{}, updater bson.M) (int64, error) {
-
+func (b *BaseModel) FindWhere(where bson.M) (interface{}, error) {
 	coll, e := b.takeCollection()
 	if e != nil {
-		log.Println(e)
-		return 0, e
+		return nil, e
+	}
+	v := reflect.New(b.Type)
+	e = coll.FindOne(context.TODO(), where).Decode(v.Interface())
+	if e != nil {
+		return nil, e
 	}
 
-	l, e := coll.UpdateOne(context.TODO(), bson.M{"_id": id}, bson.M{
+	return v.Interface(), nil
+}
+
+func (b *BaseModel) QueryWhere(where bson.M) (interface{}, error) {
+	coll, e := b.takeCollection()
+	if e != nil {
+		return nil, e
+	}
+	vs := reflect.New(reflect.SliceOf(reflect.PtrTo(b.Type)))
+	cursor, e := coll.Find(context.TODO(), where)
+	if e != nil {
+		return nil, e
+	}
+
+	e = cursor.All(context.TODO(), vs.Interface())
+	if e != nil {
+		return nil, e
+	}
+	return vs.Elem().Interface(), nil
+}
+
+func (b *BaseModel) UpdateSet(id string, updater bson.M) (int64, error) {
+	coll, e := b.takeCollection()
+	if e != nil {
+		return 0, e
+	}
+	obj, e := primitive.ObjectIDFromHex(id)
+	if e != nil {
+		return 0, nil
+	}
+
+	l, e := coll.UpdateOne(context.TODO(), bson.M{"_id": obj}, bson.M{
 		"$set": updater,
 	})
 	if e != nil {
-		log.Println(e)
 		return 0, e
 	}
+	return l.ModifiedCount, nil
+}
+
+func (b *BaseModel) Update(id string, updator bson.M) (int64, error) {
+	coll, e := b.takeCollection()
+	if e != nil {
+		return 0, e
+	}
+
+	obj, e := primitive.ObjectIDFromHex(id)
+	if e != nil {
+		return 0, e
+	}
+
+	l, e := coll.UpdateOne(context.TODO(), bson.M{"_id": obj}, updator)
+	if e != nil {
+		return 0, e
+	}
+
 	return l.ModifiedCount, nil
 }
