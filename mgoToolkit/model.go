@@ -50,9 +50,19 @@ func (b *BaseModel) initData(data interface{}) (bool, error) {
 	indexes := map[string]int{}
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
+		if i == 0 {
+			if field.Type.String() != "primitive.ObjectID" {
+				return false, errors.New(t.Name() + "类型的" + field.Name + "字段不是primitive.ObjectID类型")
+			}
+		}
 		bson, ok := field.Tag.Lookup("bson")
 		if !ok {
 			return false, errors.New(t.Name() + "类型的" + field.Name + "字段没有加bson的tag")
+		}
+		if i == 0 {
+			if bson != "_id,omitempty" {
+				return false, errors.New(t.Name() + "类型的" + field.Name + "字段tag不是 _id,omitempty")
+			}
 		}
 
 		if _, ok := field.Tag.Lookup("index"); ok || bson == "createTime" {
@@ -189,4 +199,32 @@ func (b *BaseModel) Update(id string, updator bson.M) (int64, error) {
 	}
 
 	return l.ModifiedCount, nil
+}
+
+// Clear clear collection
+func (b *BaseModel) Clear() error {
+	_, e := b.Collection.DeleteMany(context.TODO(), bson.M{})
+	return e
+}
+
+func (b *BaseModel) Delete(id string) (int64, error) {
+	obj, e := primitive.ObjectIDFromHex(id)
+	if e != nil {
+		return 0, e
+	}
+	r, e := b.Collection.DeleteOne(context.TODO(), bson.M{
+		"_id": obj,
+	})
+	if e != nil {
+		return 0, e
+	}
+	return r.DeletedCount, nil
+}
+
+func (b *BaseModel) DeleteWhere(where bson.M) (int64, error) {
+	r, e := b.Collection.DeleteMany(context.TODO(), where)
+	if e != nil {
+		return 0, e
+	}
+	return r.DeletedCount, nil
 }
