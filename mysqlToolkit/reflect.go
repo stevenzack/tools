@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/StevenZack/tools/strToolkit"
+	"github.com/iancoleman/strcase"
 )
 
 func GetDBTagMap(t reflect.Type) map[string]int {
@@ -21,7 +21,7 @@ func GetDBTagMap(t reflect.Type) map[string]int {
 func GetDBTag(field reflect.StructField) string {
 	db, ok := field.Tag.Lookup("db")
 	if !ok {
-		return strToolkit.ToSnakeCase(field.Name)
+		return strcase.ToSnake(field.Name)
 	}
 	return db
 }

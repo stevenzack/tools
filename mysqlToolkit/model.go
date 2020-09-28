@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/StevenZack/tools/strToolkit"
+	"github.com/iancoleman/strcase"
 )
 
 type (
@@ -62,7 +63,7 @@ func (b *BaseMySQLModel) initData(data interface{}) (bool, error) {
 	if b.Type.Kind().String() == "ptr" {
 		b.Type = b.Type.Elem()
 	}
-	b.TableName = strToolkit.ToSnakeCase(b.AppName) + "_" + strToolkit.ToSnakeCase(b.Type.Name())
+	b.TableName = strcase.ToSnake(b.AppName) + "_" + strcase.ToSnake(b.Type.Name())
 
 	indexes := []string{}
 	b.sqlGenerated = `create table ` + b.Database + `.` + b.TableName + "(\n"
@@ -73,7 +74,7 @@ func (b *BaseMySQLModel) initData(data interface{}) (bool, error) {
 		if !ok {
 			return false, errors.New(b.Type.Name() + "类型的" + field.Name + "字段没有写'db' Tag")
 		}
-		if db != strToolkit.ToSnakeCase(field.Name) {
+		if db != strcase.ToSnake(field.Name) {
 			return false, errors.New(b.Type.Name() + "类型的'db'Tag格式不是标准的SnakeCase")
 		}
 		comment, ok := field.Tag.Lookup("comment")

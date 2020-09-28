@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/go-sql-driver/mysql v1.5.0
+	github.com/iancoleman/strcase v0.1.2
 	github.com/klauspost/compress v1.10.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	go.mongodb.org/mongo-driver v1.3.2
