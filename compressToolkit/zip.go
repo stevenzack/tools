@@ -82,6 +82,9 @@ func CompressFilesTo(dst io.Writer, paths []string, progress func(offset, total 
 				for {
 					n, e := fi.Read(buf)
 					if e != nil {
+						if e == io.EOF {
+							break
+						}
 						log.Println(e)
 						return e
 					}
@@ -95,6 +98,7 @@ func CompressFilesTo(dst io.Writer, paths []string, progress func(offset, total 
 						progress(offset, total)
 					}
 				}
+				return nil
 			})
 			if e != nil {
 				log.Println(e)
@@ -123,6 +127,9 @@ func CompressFilesTo(dst io.Writer, paths []string, progress func(offset, total 
 		for {
 			n, e := fi.Read(buf)
 			if e != nil {
+				if e == io.EOF {
+					break
+				}
 				log.Println(e)
 				return e
 			}
