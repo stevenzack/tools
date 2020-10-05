@@ -53,7 +53,7 @@ func CompressFilesTo(dst io.Writer, paths []string, progress func(offset, total 
 					return e
 				}
 				if info.IsDir() {
-					_, e := zw.Create(rel)
+					_, e := zw.Create(strToolkit.Getrpath(rel))
 					if e != nil {
 						log.Println(e)
 						return e
