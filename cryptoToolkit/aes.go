@@ -16,6 +16,9 @@ func padding(src []byte, blockSize int) []byte {
 // 去掉填充数据
 func unpadding(src []byte) []byte {
 	n := len(src)
+	if n==0{
+		return nil
+	}
 	unPadNum := int(src[n-1])
 	return src[:n-unPadNum]
 }

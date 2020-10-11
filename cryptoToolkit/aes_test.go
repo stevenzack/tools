@@ -22,4 +22,19 @@ func TestEncryptAES(t *testing.T) {
 		t.Error("str is not data , but ", str)
 		return
 	}
+
+	enc, e = EncryptAES(nil, nil)
+	if e != nil {
+		t.Error(e)
+		return
+	}
+	dec, e = DecryptAES(nil, nil)
+	if e != nil {
+		t.Error(e)
+		return
+	}
+	if dec != nil {
+		t.Error("dec is not nil , but ", dec)
+		return
+	}
 }
