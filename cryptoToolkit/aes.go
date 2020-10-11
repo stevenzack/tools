@@ -22,23 +22,25 @@ func unpadding(src []byte) []byte {
 
 // 加密
 func EncryptAES(src []byte, key []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
+	c := Md5FromBytes(key)
+	block, err := aes.NewCipher(c)
 	if err != nil {
 		return nil, err
 	}
 	src = padding(src, block.BlockSize())
-	blockMode := cipher.NewCBCEncrypter(block, key)
+	blockMode := cipher.NewCBCEncrypter(block, c)
 	blockMode.CryptBlocks(src, src)
 	return src, nil
 }
 
 // 解密
 func DecryptAES(src []byte, key []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
+	c := Md5FromBytes(key)
+	block, err := aes.NewCipher(c)
 	if err != nil {
 		return nil, err
 	}
-	blockMode := cipher.NewCBCDecrypter(block, key)
+	blockMode := cipher.NewCBCDecrypter(block, c)
 	blockMode.CryptBlocks(src, src)
 	src = unpadding(src)
 	return src, nil
