@@ -1,4 +1,4 @@
-package timex
+package timeToolkit
 
 const (
 	LAYOUT_DATE  = "2006-01-02"

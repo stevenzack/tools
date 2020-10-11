@@ -1,4 +1,4 @@
-package timex
+package timeToolkit
 
 import (
 	"time"
@@ -21,7 +21,7 @@ func DayBetween(t time.Time) (time.Time, time.Time) {
 }
 
 // week
-func BetweenThisWeek()(time.Time,time.Time){
+func BetweenThisWeek() (time.Time, time.Time) {
 	return WeekBetween(time.Now())
 }
 func WeekBetween(t time.Time) (time.Time, time.Time) {
