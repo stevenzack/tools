@@ -1,9 +1,9 @@
 module github.com/StevenZack/tools
 
-go 1.14
+go 1.15
 
 require (
-	github.com/aws/aws-sdk-go v1.35.6 // indirect
+	github.com/aws/aws-sdk-go v1.35.7 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/iancoleman/strcase v0.1.2
