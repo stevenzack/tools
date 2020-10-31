@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"errors"
 )
 
 // 填充数据
@@ -14,13 +15,16 @@ func padding(src []byte, blockSize int) []byte {
 }
 
 // 去掉填充数据
-func unpadding(src []byte) []byte {
+func unpadding(src []byte) ([]byte, error) {
 	n := len(src)
-	if n==0{
-		return nil
+	if n == 0 {
+		return nil, errors.New("bad src to unpadding")
 	}
 	unPadNum := int(src[n-1])
-	return src[:n-unPadNum]
+	if n-unPadNum < 0 {
+		return nil, errors.New("bad src to unpadding")
+	}
+	return src[:n-unPadNum], nil
 }
 
 // 加密
@@ -45,6 +49,5 @@ func DecryptAES(src []byte, key []byte) ([]byte, error) {
 	}
 	blockMode := cipher.NewCBCDecrypter(block, c)
 	blockMode.CryptBlocks(src, src)
-	src = unpadding(src)
-	return src, nil
+	return unpadding(src)
 }
