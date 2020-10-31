@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/aws/aws-sdk-go v1.35.7 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
+	github.com/gofaith/go-zero v1.0.0
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/iancoleman/strcase v0.1.2
 	github.com/klauspost/compress v1.11.1 // indirect

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"io"
 	"os"
+
+	"github.com/StevenZack/tools/strToolkit"
 )
 
 func Tailn1(path string) (string, int64, error) {
@@ -24,14 +26,16 @@ func Tailn1(path string) (string, int64, error) {
 
 	reader := bufio.NewReader(file)
 	var index int64
+	var lastLine string
 	for {
 		line, e := reader.ReadString('\n')
 		if e != nil {
 			if e == io.EOF {
-				return line, index, nil
+				return lastLine, index, nil
 			}
 			return "", 0, e
 		}
 		index++
+		lastLine = strToolkit.TrimEnd(line, "\n")
 	}
 }
