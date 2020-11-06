@@ -25,3 +25,11 @@ func Run(program string, args ...string) (string, error) {
 	}
 	return out.String(), nil
 }
+
+func RunAttach(program string, args ...string) error {
+	c := exec.Command(program, args...)
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	return c.Run()
+}
