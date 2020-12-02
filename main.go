@@ -9,7 +9,7 @@ import (
 func main() {
 	s := cryptoToolkit.Sha1FromValues(map[string]interface{}{
 		"one": 1,
-		"two": 2,
+		"two": "https://www.mindyushu.com",
 	})
 	fmt.Println(s)
 }

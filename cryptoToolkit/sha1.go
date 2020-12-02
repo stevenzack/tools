@@ -4,7 +4,6 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io"
-	"net/url"
 	"sort"
 	"strings"
 )
@@ -15,12 +14,14 @@ func Sha1FromValues(vs map[string]interface{}) string {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	values := url.Values{}
-	for _, key := range keys {
-		values.Add(key, fmt.Sprint(vs[key]))
+	buf := new(strings.Builder)
+	for i, key := range keys {
+		buf.WriteString(key + "=" + fmt.Sprint(vs[key]))
+		if i < len(keys)-1 {
+			buf.WriteString("&")
+		}
 	}
-	str := values.Encode()
 	sha1 := sha1.New()
-	io.Copy(sha1, strings.NewReader(str))
+	io.Copy(sha1, strings.NewReader(buf.String()))
 	return fmt.Sprintf("%x", sha1.Sum(nil))
 }
