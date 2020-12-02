@@ -1,18 +1,15 @@
 package main
 
 import (
-	"log"
+	"fmt"
 
-	"github.com/StevenZack/tools/fileToolkit"
-	"github.com/gofaith/go-zero/core/logx"
+	"github.com/StevenZack/tools/cryptoToolkit"
 )
 
 func main() {
-	line, i, e := fileToolkit.Tailn1("/home/asd/app-test/base/logs/error.log")
-	if e != nil {
-		log.Println(e)
-		return
-	}
-	logx.Info(i)
-	logx.Info(line)
+	s := cryptoToolkit.Sha1FromValues(map[string]interface{}{
+		"one": 1,
+		"two": 2,
+	})
+	fmt.Println(s)
 }
