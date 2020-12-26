@@ -2,14 +2,19 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"strings"
 
-	"github.com/StevenZack/tools/cryptoToolkit"
+	"github.com/StevenZack/tools/fileToolkit"
 )
 
 func main() {
-	s := cryptoToolkit.Sha1FromValues(map[string]interface{}{
-		"one": 1,
-		"two": "https://www.mindyushu.com",
+	out, e := fileToolkit.Walk(".", func(path string) bool {
+		return strings.HasSuffix(path, ".go")
 	})
-	fmt.Println(s)
+	if e != nil {
+		log.Println(e)
+		return
+	}
+	fmt.Println(strings.Join(out, "\n"))
 }
