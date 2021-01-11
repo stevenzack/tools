@@ -47,12 +47,12 @@ func (b *BaseModel) initData(data interface{}) (bool, error) {
 		return false, errors.New("data必须是非指针类型")
 	}
 
-	indexes := map[string]int{}
+	indexes := map[string]string{}
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		if i == 0 {
-			if field.Type.String() != "primitive.ObjectID" {
-				return false, errors.New(t.Name() + "类型的" + field.Name + "字段不是primitive.ObjectID类型")
+			if field.Type.String() != "primitive.ObjectID" && field.Type.String() != "string" {
+				return false, errors.New(t.Name() + "类型的" + field.Name + "字段不是primitive.ObjectID类型或string类型")
 			}
 		}
 		bson, ok := field.Tag.Lookup("bson")
@@ -65,8 +65,8 @@ func (b *BaseModel) initData(data interface{}) (bool, error) {
 			}
 		}
 
-		if _, ok := field.Tag.Lookup("index"); ok || bson == "createTime" {
-			indexes[bson] = 1
+		if index, ok := field.Tag.Lookup("index"); ok || bson == "createTime" {
+			indexes[bson] = index
 		}
 	}
 
@@ -109,7 +109,23 @@ func (b *BaseModel) Insert(v interface{}) (string, error) {
 	if e != nil {
 		return "", e
 	}
-	return result.InsertedID.(primitive.ObjectID).Hex(), nil
+
+	if obj, ok := result.InsertedID.(primitive.ObjectID); ok {
+		return obj.Hex(), nil
+	}
+	if obj, ok := result.InsertedID.(string); ok {
+		return obj, nil
+	}
+	panic("invalid insertedID type:" + reflect.TypeOf(result.InsertedID).String())
+}
+
+func (b *BaseModel) InsertMany(v []interface{}) error {
+	coll, e := b.takeCollection()
+	if e != nil {
+		return e
+	}
+	_, e = coll.InsertMany(context.TODO(), v)
+	return e
 }
 
 func (b *BaseModel) Find(id string) (interface{}, error) {
@@ -118,9 +134,12 @@ func (b *BaseModel) Find(id string) (interface{}, error) {
 		return nil, e
 	}
 
-	obj, e := primitive.ObjectIDFromHex(id)
-	if e != nil {
-		return nil, errors.New(e.Error() + ":" + id)
+	var obj interface{}
+
+	if o, e := primitive.ObjectIDFromHex(id); e == nil {
+		obj = o
+	} else {
+		obj = id
 	}
 	v := reflect.New(b.Type)
 	e = coll.FindOne(context.TODO(), bson.M{"_id": obj}).Decode(v.Interface())
@@ -145,6 +164,66 @@ func (b *BaseModel) FindWhere(where bson.M) (interface{}, error) {
 	return v.Interface(), nil
 }
 
+func (b *BaseModel) FindWhereD(where bson.D) (interface{}, error) {
+	coll, e := b.takeCollection()
+	if e != nil {
+		return nil, e
+	}
+	v := reflect.New(b.Type)
+	e = coll.FindOne(context.TODO(), where).Decode(v.Interface())
+	if e != nil {
+		return nil, e
+	}
+
+	return v.Interface(), nil
+}
+
+func (b *BaseModel) CountWhere(where bson.M) (int64, error) {
+	coll, e := b.takeCollection()
+	if e != nil {
+		return 0, e
+	}
+	return coll.CountDocuments(context.TODO(), where)
+}
+
+func (b *BaseModel) SumWhere(match bson.M, field string) (float64, error) {
+	p := []bson.M{
+		{
+			"$match": match,
+		},
+		{
+			"$group": bson.M{
+				"_id": nil,
+				"sum": bson.M{
+					"$sum": "$" + field,
+				},
+			},
+		},
+	}
+	cursor, e := b.Collection.Aggregate(context.TODO(), p)
+	if e != nil {
+		return 0, e
+	}
+	defer cursor.Close(context.TODO())
+	vs := []*SumClass{}
+	e = cursor.All(context.TODO(), &vs)
+	if e != nil {
+		return 0, e
+	}
+	if len(vs) == 0 {
+		return 0, nil
+	}
+	return vs[0].Sum, nil
+}
+
+func (b *BaseModel) CountWhereD(where bson.D) (int64, error) {
+	coll, e := b.takeCollection()
+	if e != nil {
+		return 0, e
+	}
+	return coll.CountDocuments(context.TODO(), where)
+}
+
 func (b *BaseModel) QueryWhere(where bson.M) (interface{}, error) {
 	coll, e := b.takeCollection()
 	if e != nil {
@@ -163,15 +242,48 @@ func (b *BaseModel) QueryWhere(where bson.M) (interface{}, error) {
 	}
 	return vs.Elem().Interface(), nil
 }
+func (b *BaseModel) QueryWhereD(where bson.D) (interface{}, error) {
+	coll, e := b.takeCollection()
+	if e != nil {
+		return nil, e
+	}
+	vs := reflect.New(reflect.SliceOf(reflect.PtrTo(b.Type)))
+	cursor, e := coll.Find(context.TODO(), where)
+	if e != nil {
+		return nil, e
+	}
 
+	defer cursor.Close(context.TODO())
+	e = cursor.All(context.TODO(), vs.Interface())
+	if e != nil {
+		return nil, e
+	}
+	return vs.Elem().Interface(), nil
+}
+
+func (b *BaseModel) Aggregate(pipeline []bson.M) (interface{}, error) {
+	cursor, e := b.Collection.Aggregate(context.TODO(), pipeline)
+	if e != nil {
+		return nil, e
+	}
+	defer cursor.Close(context.TODO())
+	vs := reflect.New(reflect.SliceOf(reflect.PtrTo(b.Type)))
+	e = cursor.All(context.TODO(), vs.Interface())
+	if e != nil {
+		return nil, e
+	}
+	return vs.Elem().Interface(), nil
+}
 func (b *BaseModel) UpdateSet(id string, updater bson.M) (int64, error) {
 	coll, e := b.takeCollection()
 	if e != nil {
 		return 0, e
 	}
-	obj, e := primitive.ObjectIDFromHex(id)
-	if e != nil {
-		return 0, nil
+	var obj interface{}
+	if o, e := primitive.ObjectIDFromHex(id); e == nil {
+		obj = o
+	} else {
+		obj = id
 	}
 
 	l, e := coll.UpdateOne(context.TODO(), bson.M{"_id": obj}, bson.M{
@@ -189,9 +301,11 @@ func (b *BaseModel) Update(id string, updator bson.M) (int64, error) {
 		return 0, e
 	}
 
-	obj, e := primitive.ObjectIDFromHex(id)
-	if e != nil {
-		return 0, e
+	var obj interface{}
+	if o, e := primitive.ObjectIDFromHex(id); e == nil {
+		obj = o
+	} else {
+		obj = id
 	}
 
 	l, e := coll.UpdateOne(context.TODO(), bson.M{"_id": obj}, updator)
@@ -202,7 +316,7 @@ func (b *BaseModel) Update(id string, updator bson.M) (int64, error) {
 	return l.ModifiedCount, nil
 }
 
-func (b *BaseModel) UpdateWhere(where, updator bson.M) (int64, error) {
+func (b *BaseModel) UpdateWhere(where bson.M, updator interface{}) (int64, error) {
 	r, e := b.Collection.UpdateMany(context.TODO(), where, updator)
 	if e != nil {
 		return 0, e
@@ -217,9 +331,12 @@ func (b *BaseModel) Clear() error {
 }
 
 func (b *BaseModel) Delete(id string) (int64, error) {
-	obj, e := primitive.ObjectIDFromHex(id)
-	if e != nil {
-		return 0, e
+	var obj interface{}
+
+	if o, e := primitive.ObjectIDFromHex(id); e == nil {
+		obj = o
+	} else {
+		obj = id
 	}
 	r, e := b.Collection.DeleteOne(context.TODO(), bson.M{
 		"_id": obj,
