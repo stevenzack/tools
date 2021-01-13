@@ -228,3 +228,10 @@ func SubBetween(s string, start, end rune) (string, error) {
 	}
 	return "", errors.New("no end " + string(end))
 }
+
+func Ellipsis(s string, width int) string {
+	if len(s) > width {
+		return s[:width] + ".."
+	}
+	return s
+}
