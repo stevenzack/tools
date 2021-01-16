@@ -55,10 +55,10 @@ func CreateIndex(coll *mongo.Collection, indexes map[string]string) error {
 						seq = 1
 					}
 				}
-			case "uniq":
-				uniq := vs.Get("uniq")
-				if uniq != "" {
-					options.SetUnique(uniq == "true")
+			case "unique":
+				unique := vs.Get("unique")
+				if unique != "" {
+					options.SetUnique(unique == "true")
 				}
 			default:
 				return errors.New("field '" + key + "', unsupported key:" + k)
