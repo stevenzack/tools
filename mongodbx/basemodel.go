@@ -178,6 +178,19 @@ func (b *BaseModel) FindWhereD(where bson.D) (interface{}, error) {
 	return v.Interface(), nil
 }
 
+func (b *BaseModel) Count(id string) (int64, error) {
+	var data interface{}
+	obj, e := primitive.ObjectIDFromHex(id)
+	if e != nil {
+		data = id
+	} else {
+		data = obj
+	}
+	return b.CountWhere(bson.M{
+		"_id": data,
+	})
+}
+
 func (b *BaseModel) CountWhere(where bson.M) (int64, error) {
 	coll, e := b.takeCollection()
 	if e != nil {
@@ -353,4 +366,28 @@ func (b *BaseModel) DeleteWhere(where bson.M) (int64, error) {
 		return 0, e
 	}
 	return r.DeletedCount, nil
+}
+
+func (b *BaseModel) Exists(id string) (bool, error) {
+	count, e := b.Count(id)
+	if e != nil {
+		return false, e
+	}
+	return count > 0, nil
+}
+
+func (b *BaseModel) ExistsWhere(where bson.M) (bool, error) {
+	count, e := b.CountWhere(where)
+	if e != nil {
+		return false, e
+	}
+	return count > 0, nil
+}
+
+func (b *BaseModel) ExistsWhereD(where bson.D) (bool, error) {
+	count, e := b.CountWhereD(where)
+	if e != nil {
+		return false, e
+	}
+	return count > 0, nil
 }
