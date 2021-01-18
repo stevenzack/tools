@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -35,13 +36,15 @@ func CollectionExists(db *mongo.Database, coll string) (bool, error) {
 // CreateIndex creates indexes for coll
 func CreateIndex(coll *mongo.Collection, indexes map[string]string) error {
 	imodels := []mongo.IndexModel{}
+	groups := make(map[string]mongo.IndexModel)
 	for key, v := range indexes {
-		vs, e := url.ParseQuery(v)
+		vs, e := url.ParseQuery(strings.ReplaceAll(v, ",", "&"))
 		if e != nil {
 			return errors.New("field '" + key + "', invalid value format:" + v)
 		}
 		seq := -1
-		options := options.Index()
+		optFns := []func(options *options.IndexOptions){}
+		group := ""
 		for k := range vs {
 			switch k {
 			case "seq":
@@ -58,21 +61,65 @@ func CreateIndex(coll *mongo.Collection, indexes map[string]string) error {
 			case "unique":
 				unique := vs.Get("unique")
 				if unique != "" {
-					options.SetUnique(unique == "true")
+					optFns = append(optFns, func(options *options.IndexOptions) {
+						options.SetUnique(unique == "true")
+					})
 				}
+			case "group":
+				group = vs.Get(k)
 			default:
 				return errors.New("field '" + key + "', unsupported key:" + k)
 			}
 		}
 
-		imodel := mongo.IndexModel{
-			Keys: bson.M{
-				key: seq,
-			},
-			Options: options,
+		if group == "" {
+			imodel := mongo.IndexModel{
+				Keys: bson.D{
+					{
+						Key:   key,
+						Value: seq,
+					},
+				},
+				Options: options.Index(),
+			}
+			for _, fn := range optFns {
+				fn(imodel.Options)
+			}
+			imodels = append(imodels, imodel)
+			continue
 		}
-		imodels = append(imodels, imodel)
+		//group
+		imodel, ok := groups[group]
+		if !ok {
+			imodel = mongo.IndexModel{
+				Keys: bson.D{
+					{
+						Key:   key,
+						Value: seq,
+					},
+				},
+				Options: options.Index(),
+			}
+			for _, fn := range optFns {
+				fn(imodel.Options)
+			}
+			groups[group] = imodel
+			continue
+		}
+		imodel.Keys = append(imodel.Keys.(bson.D), bson.E{
+			Key:   key,
+			Value: seq,
+		})
+		for _, fn := range optFns {
+			fn(imodel.Options)
+		}
+		groups[group] = imodel
 	}
+
+	for _, v := range groups {
+		imodels = append(imodels, v)
+	}
+
 	if len(imodels) == 0 {
 		return nil
 	}
