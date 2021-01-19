@@ -65,7 +65,7 @@ func (b *BaseModel) initData(data interface{}) (bool, error) {
 			}
 		}
 
-		if index, ok := field.Tag.Lookup("index"); ok || bson == "createTime" {
+		if index, ok := field.Tag.Lookup("index"); ok {
 			indexes[bson] = index
 		}
 	}
