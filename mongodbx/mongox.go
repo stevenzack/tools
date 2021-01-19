@@ -3,6 +3,7 @@ package mongodbx
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -114,8 +115,9 @@ func CreateIndex(coll *mongo.Collection, indexes map[string]string) error {
 					},
 					Options: options.Index(),
 				}
+				fmt.Println(strings.HasPrefix(group, "unique"))
 				if strings.HasPrefix(group, "unique") {
-					imodel.Options.SetUnique(unique)
+					imodel.Options.SetUnique(true)
 				}
 				groups[group] = imodel
 				continue
