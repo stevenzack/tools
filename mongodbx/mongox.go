@@ -42,80 +42,93 @@ func CreateIndex(coll *mongo.Collection, indexes map[string]string) error {
 		if e != nil {
 			return errors.New("field '" + key + "', invalid value format:" + v)
 		}
-		seq := -1
-		optFns := []func(options *options.IndexOptions){}
+		groupseq := 1
+		unique := false
 		group := ""
+		single := 0
 		for k := range vs {
 			switch k {
-			case "seq":
+			case "groupseq":
 				sequence := vs.Get(k)
 				if sequence != "" {
-					seq, e = strconv.Atoi(sequence)
+					groupseq, e = strconv.Atoi(sequence)
 					if e != nil {
-						return errors.New("field '" + key + "', invalid seq format:" + v)
+						return errors.New("field '" + key + "', invalid groupseq format:" + v)
 					}
-					if seq != -1 {
-						seq = 1
+					if groupseq != -1 {
+						groupseq = 1
 					}
 				}
 			case "unique":
-				unique := vs.Get("unique")
-				if unique != "" {
-					optFns = append(optFns, func(options *options.IndexOptions) {
-						options.SetUnique(unique == "true")
-					})
-				}
+				unique = vs.Get("unique") == "true"
 			case "group":
 				group = vs.Get(k)
+			case "single":
+				sequence := vs.Get(k)
+				if sequence != "" {
+					single, e = strconv.Atoi(sequence)
+					if e != nil {
+						return errors.New("field '" + key + "', invalid single format:" + v)
+					}
+					if single != -1 {
+						single = 1
+					} else {
+						single = -1
+					}
+				}
 			default:
 				return errors.New("field '" + key + "', unsupported key:" + k)
 			}
 		}
 
 		if group == "" {
+			single = 1
+		}
+
+		//single index
+		if single != 0 {
 			imodel := mongo.IndexModel{
 				Keys: bson.D{
 					{
 						Key:   key,
-						Value: seq,
+						Value: single,
 					},
 				},
 				Options: options.Index(),
 			}
-			for _, fn := range optFns {
-				fn(imodel.Options)
+			if unique {
+				imodel.Options.SetUnique(unique)
 			}
 			imodels = append(imodels, imodel)
-			continue
 		}
-		//group
-		imodel, ok := groups[group]
-		if !ok {
-			imodel = mongo.IndexModel{
-				Keys: bson.D{
-					{
-						Key:   key,
-						Value: seq,
+		//group index
+		if group != "" {
+			imodel, ok := groups[group]
+			if !ok {
+				imodel = mongo.IndexModel{
+					Keys: bson.D{
+						{
+							Key:   key,
+							Value: groupseq,
+						},
 					},
-				},
-				Options: options.Index(),
+					Options: options.Index(),
+				}
+				if strings.HasPrefix(group, "unique") {
+					imodel.Options.SetUnique(unique)
+				}
+				groups[group] = imodel
+				continue
 			}
-			for _, fn := range optFns {
-				fn(imodel.Options)
-			}
+			imodel.Keys = append(imodel.Keys.(bson.D), bson.E{
+				Key:   key,
+				Value: groupseq,
+			})
 			groups[group] = imodel
-			continue
 		}
-		imodel.Keys = append(imodel.Keys.(bson.D), bson.E{
-			Key:   key,
-			Value: seq,
-		})
-		for _, fn := range optFns {
-			fn(imodel.Options)
-		}
-		groups[group] = imodel
 	}
 
+	//add group indexes
 	for _, v := range groups {
 		imodels = append(imodels, v)
 	}
