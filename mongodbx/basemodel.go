@@ -368,6 +368,14 @@ func (b *BaseModel) DeleteWhere(where bson.M) (int64, error) {
 	return r.DeletedCount, nil
 }
 
+func (b *BaseModel) DeleteWhereD(where bson.D) (int64, error) {
+	r, e := b.Collection.DeleteMany(context.TODO(), where)
+	if e != nil {
+		return 0, e
+	}
+	return r.DeletedCount, nil
+}
+
 func (b *BaseModel) Exists(id string) (bool, error) {
 	count, e := b.Count(id)
 	if e != nil {
