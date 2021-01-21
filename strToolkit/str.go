@@ -1,6 +1,7 @@
 package strToolkit
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/md5"
 	"encoding/json"
@@ -234,4 +235,22 @@ func Ellipsis(s string, width int) string {
 		return s[:width] + ".."
 	}
 	return s
+}
+
+func RangeLines(s string, fn func(line string) bool) error {
+	r := bufio.NewReader(strings.NewReader(s))
+	for {
+		line, e := r.ReadString('\n')
+		if e != nil {
+			if e == io.EOF {
+				break
+			}
+			return e
+		}
+		line = TrimEnd(line, "\n")
+		if fn(line) {
+			break
+		}
+	}
+	return nil
 }
