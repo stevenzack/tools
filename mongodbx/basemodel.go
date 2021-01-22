@@ -337,6 +337,14 @@ func (b *BaseModel) UpdateWhere(where bson.M, updator interface{}) (int64, error
 	return r.ModifiedCount, nil
 }
 
+func (b *BaseModel) UpdateWhereD(where bson.D, updator interface{}) (int64, error) {
+	r, e := b.Collection.UpdateMany(context.TODO(), where, updator)
+	if e != nil {
+		return 0, e
+	}
+	return r.ModifiedCount, nil
+}
+
 // Clear clear collection
 func (b *BaseModel) Clear() error {
 	_, e := b.Collection.DeleteMany(context.TODO(), bson.M{})
