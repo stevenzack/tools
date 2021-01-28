@@ -7,7 +7,9 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/StevenZack/tools/timeToolkit"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -156,4 +158,40 @@ func CreateIndexIfNotExists(db *mongo.Database, collname string, indexes map[str
 	coll := DialCollection(db, collname)
 
 	return true, CreateIndex(coll, indexes)
+}
+
+func BetweenTime(field string, start, end time.Time, m bson.M) bson.M {
+	if start == timeToolkit.ZeroTime && end == timeToolkit.ZeroTime {
+		return m
+	}
+	b := bson.M{}
+	if start != timeToolkit.ZeroTime {
+		b["$gte"] = start
+	}
+	if end != timeToolkit.ZeroTime {
+		b["$lt"] = end
+	}
+
+	m[field] = b
+	return m
+}
+
+func BetweenTimeD(field string, start, end time.Time, d bson.D) bson.D {
+	if start == timeToolkit.ZeroTime && end == timeToolkit.ZeroTime {
+		return d
+	}
+
+	b := bson.M{}
+	if start != timeToolkit.ZeroTime {
+		b["$gte"] = start
+	}
+	if end != timeToolkit.ZeroTime {
+		b["$lt"] = end
+	}
+
+	d = append(d, bson.E{
+		Key:   field,
+		Value: b,
+	})
+	return d
 }
