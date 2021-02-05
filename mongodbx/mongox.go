@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/StevenZack/tools/strToolkit"
 	"github.com/StevenZack/tools/timeToolkit"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -93,7 +94,7 @@ func CreateIndex(coll *mongo.Collection, indexes map[string]string) error {
 			imodel := mongo.IndexModel{
 				Keys: bson.D{
 					{
-						Key:   key,
+						Key:   strToolkit.SubBefore(key, ",", key),
 						Value: single,
 					},
 				},
@@ -111,7 +112,7 @@ func CreateIndex(coll *mongo.Collection, indexes map[string]string) error {
 				imodel = mongo.IndexModel{
 					Keys: bson.D{
 						{
-							Key:   key,
+							Key:   strToolkit.SubBefore(key, ",", key),
 							Value: groupseq,
 						},
 					},
@@ -125,7 +126,7 @@ func CreateIndex(coll *mongo.Collection, indexes map[string]string) error {
 				continue
 			}
 			imodel.Keys = append(imodel.Keys.(bson.D), bson.E{
-				Key:   key,
+				Key:   strToolkit.SubBefore(key, ",", key),
 				Value: groupseq,
 			})
 			groups[group] = imodel
