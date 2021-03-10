@@ -42,6 +42,9 @@ func EncryptAES(src []byte, key []byte) ([]byte, error) {
 
 // 解密
 func DecryptAES(src []byte, key []byte) ([]byte, error) {
+	if len(src) < len(key) {
+		return nil, errors.New("invalid input src length")
+	}
 	c := Md5FromBytes(key)
 	block, err := aes.NewCipher(c)
 	if err != nil {
