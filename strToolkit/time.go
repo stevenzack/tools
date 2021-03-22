@@ -26,6 +26,24 @@ func NewNumToken() string {
 	return strconv.FormatInt(int64(r.Intn(60000)), 10)
 }
 
+func FormatSeconds(sec int) string {
+	d := time.Second * time.Duration(sec)
+
+	h := d / time.Hour
+	d -= h * time.Hour
+
+	m := d / time.Minute
+	d -= m * time.Minute
+
+	s := d / time.Second
+	d -= m * time.Second
+
+	if h >= 1 {
+		return fmt.Sprintf("%02d:%02d:%02d", h, m, s)
+	}
+	return fmt.Sprintf("%02d:%02d", m, s)
+}
+
 func FormatDuration(d time.Duration) string {
 	str := ""
 	if d < 0 {
