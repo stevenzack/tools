@@ -240,7 +240,7 @@ func Ellipsis(s string, width int) string {
 func EllipsisRune(s string, width int) string {
 	rs := []rune(s)
 	if len(rs) > width {
-		return s[:width] + ".."
+		return string(rs[:width]) + ".."
 	}
 	return s
 }
