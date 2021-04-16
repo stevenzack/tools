@@ -237,6 +237,14 @@ func Ellipsis(s string, width int) string {
 	return s
 }
 
+func EllipsisRune(s string, width int) string {
+	rs := []rune(s)
+	if len(rs) > width {
+		return s[:width] + ".."
+	}
+	return s
+}
+
 func RangeLines(s string, fn func(line string) bool) error {
 	r := bufio.NewReader(strings.NewReader(s))
 	for {
