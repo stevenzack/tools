@@ -16,10 +16,12 @@ func ToVersionCode(version string) (int, error) {
 		}
 		switch i {
 		case 0:
-			out += v * 10000
+			out += v * 1000000
 		case 1:
-			out += v * 100
+			out += v * 10000
 		case 2:
+			out += v * 100
+		case 3:
 			out += v
 		default:
 			return 0, errors.New("version too long:" + version)
