@@ -170,21 +170,26 @@ func GetIconURLByFileType(fpath string) string {
 		return server + "file.png"
 	}
 }
+
 func FormatFileSize(size int64) string {
-	gb := size / 1024 / 1024 / 1024
+	gb := size >> 30
 	if gb != 0 {
-		return fmt.Sprint(gb) + "G"
+		i := size * 100 >> 30
+		return fmt.Sprintf("%.2f", float64(i)/100) + "G"
 	}
-	mb := size / 1024 / 1024
+	mb := size >> 20
 	if mb != 0 {
-		return fmt.Sprint(mb) + "M"
+		i := size * 100 >> 20
+		return fmt.Sprintf("%.2f", float64(i)/100) + "M"
 	}
-	kb := size / 1024
+	kb := size >> 10
 	if kb != 0 {
-		return fmt.Sprint(kb) + "K"
+		i := size * 100 >> 10
+		return fmt.Sprintf("%.2f", float64(i)/100) + "K"
 	}
 	return fmt.Sprint(size) + "B"
 }
+
 func IsFile(path string) (bool, error) {
 	info, e := os.Stat(path)
 	if e != nil {
