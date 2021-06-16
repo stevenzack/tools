@@ -342,6 +342,9 @@ func GetIPs(ipv6 bool) []string {
 			}
 		}
 	}
+	if len(strs) == 0 {
+		return nil
+	}
 	strs = append([]string{maxAddr}, append(strs[:maxIndex], strs[maxIndex+1:]...)...)
 	return append(strs, ipv6s...)
 }
