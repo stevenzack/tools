@@ -27,3 +27,18 @@ func UnixTimeOf(t time.Time) int64 {
 	it, _ := strconv.ParseInt(s[:10], 10, 64)
 	return it
 }
+
+func ParseUnix(str string) (time.Time, error) {
+	i, e := strconv.ParseInt(str, 10, 64)
+	if e != nil {
+		return ZeroTime, e
+	}
+	if ValidateUnix(i) {
+		return time.Unix(i, 0).In(time.Local), nil
+	}
+	if len(str) < 10 {
+		return time.Unix(i, 0).In(time.Local), nil
+	}
+	it, _ := strconv.ParseInt(str[:10], 10, 64)
+	return time.Unix(it, 0).In(time.Local), nil
+}
