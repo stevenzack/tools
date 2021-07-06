@@ -13,6 +13,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -241,12 +242,18 @@ func DoGet(url string) (string, error) {
 	return string(b), nil
 }
 func DownloadFile(url, fdist string) error {
+	info, e := os.Stat(fdist)
+	if e != nil {
+		return e
+	}
+	if info.IsDir() {
+		fdist = filepath.Base(url)
+	}
 	rp, e := http.Get(url)
 	if e != nil {
 		return e
 	}
 	defer rp.Body.Close()
-	os.MkdirAll(strToolkit.SubBeforeLast(fdist, string(os.PathSeparator), fdist), 0755)
 	f, e := os.OpenFile(fdist, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if e != nil {
 		return e
