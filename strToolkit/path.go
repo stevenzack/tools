@@ -6,6 +6,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 func GetOS() string {
@@ -73,4 +74,18 @@ func UpperPath(s string) string {
 	s = Getunpath(s)
 	sep := string(os.PathSeparator)
 	return SubBeforeLast(s, sep, sep)
+}
+
+func Prefixify(s, prefix string) string {
+	if strings.HasPrefix(s, prefix) {
+		return s
+	}
+	return prefix + s
+}
+
+func Suffixify(s, suffix string) string {
+	if strings.HasSuffix(s, suffix) {
+		return s
+	}
+	return s + suffix
 }
