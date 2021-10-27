@@ -2,7 +2,9 @@ package compressToolkit
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -11,7 +13,7 @@ import (
 	"github.com/StevenZack/tools/strToolkit"
 )
 
-func CompressFilesTo(dst io.Writer, paths []string, progress func(offset, total int64) error) error {
+func CompressFilesTo(dst io.Writer, paths []string, progress func(offset, total int64)) error {
 	const bufSize = 32 << 10
 	var total, offset int64
 	// total
@@ -21,8 +23,12 @@ func CompressFilesTo(dst io.Writer, paths []string, progress func(offset, total 
 			return e
 		}
 		if info.IsDir() {
-			e = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+			e = filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 				if !info.IsDir() {
+					info, e := d.Info()
+					if e != nil {
+						return e
+					}
 					total += info.Size()
 				}
 				return nil
@@ -36,42 +42,75 @@ func CompressFilesTo(dst io.Writer, paths []string, progress func(offset, total 
 		}
 	}
 
+	if progress != nil {
+		progress(0, total)
+	}
 	// write
 	zw := zip.NewWriter(dst)
 	defer zw.Close()
 	for _, root := range paths {
-		info, e := os.Stat(root)
+		rootInfo, e := os.Stat(root)
 		if e != nil {
 			return e
 		}
+		root, e = filepath.Abs(root)
+		if e != nil {
+			return e
+		}
+
 		base := filepath.Dir(root)
-		if info.IsDir() {
-			e = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-				rel, e := filepath.Rel(base, path)
+		if rootInfo.IsDir() {
+			e = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+				info, e := d.Info()
+				if e != nil {
+					return e
+				}
+				//dir
+				if info.IsDir() {
+					return nil
+				}
+
+				path, e = filepath.Abs(path)
+				if e!=nil {
+					return e
+				}
+				name, e := filepath.Rel(base, path)
 				if e != nil {
 					log.Println(e)
 					return e
 				}
-				if info.IsDir() {
-					_, e := zw.Create(strToolkit.Getrpath(rel))
-					if e != nil {
-						log.Println(e)
-						return e
-					}
-					return nil
-				}
+				name = filepath.ToSlash(name)
+
 				header, e := zip.FileInfoHeader(info)
 				if e != nil {
 					log.Println(e)
 					return e
 				}
-				header.Name = rel
+				header.Name = name
 
 				writer, e := zw.CreateHeader(header)
 				if e != nil {
 					log.Println(e)
 					return e
 				}
+
+				//symlink
+				if info.Mode()&os.ModeType == os.ModeSymlink {
+					link, e := os.Readlink(path)
+					if e != nil {
+						log.Println(e)
+						return e
+					}
+					_, e = writer.Write([]byte(filepath.ToSlash(link)))
+					if e != nil {
+						log.Println(e)
+						return e
+					}
+
+					return nil
+				}
+
+				//file
 				fi, e := os.OpenFile(path, os.O_RDONLY, 0644)
 				if e != nil {
 					log.Println(e)
@@ -107,7 +146,7 @@ func CompressFilesTo(dst io.Writer, paths []string, progress func(offset, total 
 			continue
 		}
 		// is file
-		header, e := zip.FileInfoHeader(info)
+		header, e := zip.FileInfoHeader(rootInfo)
 		if e != nil {
 			log.Println(e)
 			return e
@@ -122,7 +161,6 @@ func CompressFilesTo(dst io.Writer, paths []string, progress func(offset, total 
 			log.Println(e)
 			return e
 		}
-		defer fi.Close()
 		buf := make([]byte, bufSize)
 		for {
 			n, e := fi.Read(buf)
@@ -131,11 +169,13 @@ func CompressFilesTo(dst io.Writer, paths []string, progress func(offset, total 
 					break
 				}
 				log.Println(e)
+				fi.Close()
 				return e
 			}
 			_, e = writer.Write(buf[:n])
 			if e != nil {
 				log.Println(e)
+				fi.Close()
 				return e
 			}
 			offset += int64(n)
@@ -143,21 +183,27 @@ func CompressFilesTo(dst io.Writer, paths []string, progress func(offset, total 
 				progress(offset, total)
 			}
 		}
+		fi.Close()
 	}
 	progress(total, total)
 	return nil
 }
 
-func CompressFileTo(dst io.Writer, path string, progress func(offset, total int64)) error {
-	const bufSize = 32 * 1024
-	var total int64
-	info, e := os.Stat(path)
+func CompressFileTo(dst io.Writer, rootPath string, progress func(offset, total int64)) error {
+	var e error
+	rootPath, e = filepath.Abs(rootPath)
 	if e != nil {
 		return e
 	}
-	if !info.IsDir() {
-		total = info.Size()
-		file, e := os.OpenFile(path, os.O_RDONLY, 0644)
+	const bufSize = 32 * 1024
+	var total int64
+	rootInfo, e := os.Stat(rootPath)
+	if e != nil {
+		return e
+	}
+	if !rootInfo.IsDir() {
+		total = rootInfo.Size()
+		file, e := os.OpenFile(rootPath, os.O_RDONLY, 0644)
 		if e != nil {
 			return e
 		}
@@ -165,7 +211,7 @@ func CompressFileTo(dst io.Writer, path string, progress func(offset, total int6
 
 		zw := zip.NewWriter(dst)
 		defer zw.Close()
-		header, e := zip.FileInfoHeader(info)
+		header, e := zip.FileInfoHeader(rootInfo)
 		if e != nil {
 			return e
 		}
@@ -196,10 +242,25 @@ func CompressFileTo(dst io.Writer, path string, progress func(offset, total int6
 		return nil
 	}
 
-	e = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+	infos := []fs.FileInfo{}
+	paths := []string{}
+	e = filepath.WalkDir(rootPath, func(path string, d fs.DirEntry, err error) error {
+		info, e := d.Info()
+		if e != nil {
+			return e
+		}
 		if info.IsDir() {
 			return nil
 		}
+		path, e = filepath.Abs(path)
+		if e != nil {
+			return e
+		}
+		if path == rootPath {
+			return nil
+		}
+		infos = append(infos, info)
+		paths = append(paths, path)
 		total += info.Size()
 		return nil
 	})
@@ -207,40 +268,75 @@ func CompressFileTo(dst io.Writer, path string, progress func(offset, total int6
 		return e
 	}
 
+	if progress != nil {
+		progress(0, total)
+	}
+
 	zw := zip.NewWriter(dst)
 	defer zw.Close()
 	var offset int64
-	base := strToolkit.SubBeforeLast(strToolkit.Getunpath(path), string(os.PathSeparator), strToolkit.Getrpath(path)) + string(os.PathSeparator)
-
-	e = filepath.Walk(path, func(item string, info os.FileInfo, e error) error {
-		if info.IsDir() {
-			return nil
+	for i, path := range paths {
+		info := infos[i]
+		name, e := filepath.Rel(rootPath, path)
+		if e != nil {
+			return e
 		}
+		name = filepath.ToSlash(name)
+		//dir
+		if info.IsDir() {
+			continue
+		}
+
 		header, e := zip.FileInfoHeader(info)
 		if e != nil {
+			log.Println(e)
 			return e
 		}
-		header.Name = item[len(base):]
+		header.Name = name
 		writer, e := zw.CreateHeader(header)
 		if e != nil {
+			log.Println(e)
 			return e
 		}
-		buf := make([]byte, 32*1024)
-		file, e := os.OpenFile(item, os.O_RDONLY, 0644)
+
+		//symlink
+		if info.Mode()&os.ModeType == os.ModeSymlink {
+			link, e := os.Readlink(path)
+			if e != nil {
+				log.Println(e)
+				return e
+			}
+			_, e = writer.Write([]byte(filepath.ToSlash(link)))
+			if e != nil {
+				log.Println(e)
+				return e
+			}
+
+			continue
+		}
+
+		// file
+		buf := make([]byte, 32<<10)
+		fmt.Println(path)
+		fi, e := os.Open(path)
 		if e != nil {
+			log.Println(e)
 			return e
 		}
-		defer file.Close()
 		for {
-			n, e := file.Read(buf)
+			n, e := fi.Read(buf)
 			if e != nil {
 				if e == io.EOF {
 					break
 				}
+				fi.Close()
+				log.Println(e)
 				return e
 			}
 			_, e = writer.Write(buf[:n])
 			if e != nil {
+				fi.Close()
+				log.Println(e)
 				return e
 			}
 			offset += int64(n)
@@ -248,8 +344,9 @@ func CompressFileTo(dst io.Writer, path string, progress func(offset, total int6
 				progress(offset, total)
 			}
 		}
-		return nil
-	})
+		fi.Close()
+	}
+
 	return nil
 }
 
