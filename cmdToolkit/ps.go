@@ -38,15 +38,15 @@ func Ps() ([]Proc, error) {
 	return procs, nil
 }
 
-func PsProc(name string) (bool, error) {
+func PsProc(name string) (int, error) {
 	procs, e := Ps()
 	if e != nil {
-		return false, e
+		return -1, e
 	}
 	for _, proc := range procs {
 		if proc.Name == name {
-			return true, nil
+			return proc.Pid, nil
 		}
 	}
-	return false, nil
+	return -1, nil
 }
