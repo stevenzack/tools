@@ -1,10 +1,12 @@
 package cmdToolkit
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 func Run(program string, args ...string) (string, error) {
@@ -12,17 +14,24 @@ func Run(program string, args ...string) (string, error) {
 	c.Stdin = os.Stdin
 	out := new(bytes.Buffer)
 	c.Stdout = out
-	err := new(bytes.Buffer)
-	c.Stderr = err
-	e := c.Run()
+	err, e := c.StderrPipe()
 	if e != nil {
 		return "", e
 	}
+	scanner := bufio.NewScanner(err)
 
-	es := err.String()
-	if es != "" {
-		return "", errors.New(es)
+	e = c.Start()
+	if e != nil {
+		return "", e
 	}
+	for scanner.Scan() {
+		text := scanner.Text()
+		text = strings.TrimSpace(text)
+		if text != "" {
+			return "", errors.New(text)
+		}
+	}
+
 	return out.String(), nil
 }
 
