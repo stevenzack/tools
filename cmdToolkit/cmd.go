@@ -1,9 +1,7 @@
 package cmdToolkit
 
 import (
-	"bufio"
-	"bytes"
-	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -11,28 +9,15 @@ import (
 
 func Run(program string, args ...string) (string, error) {
 	c := exec.Command(program, args...)
-	c.Stdin = os.Stdin
-	out := new(bytes.Buffer)
-	c.Stdout = out
-	err, e := c.StderrPipe()
-	if e != nil {
-		return "", e
+	fo := new(strings.Builder)
+	fe := new(strings.Builder)
+	c.Stderr = fe
+	c.Stdout = fo
+	c.Run()
+	if c.ProcessState.ExitCode() != 0 {
+		return fo.String(), fmt.Errorf("run command [%s %s] failed: %s", program, strings.Join(args, " "), fe.String())
 	}
-	scanner := bufio.NewScanner(err)
-
-	e = c.Start()
-	if e != nil {
-		return "", e
-	}
-	for scanner.Scan() {
-		text := scanner.Text()
-		text = strings.TrimSpace(text)
-		if text != "" {
-			return "", errors.New(text)
-		}
-	}
-
-	return out.String(), nil
+	return fo.String() + fe.String(), nil
 }
 
 func RunAttach(program string, args ...string) error {
