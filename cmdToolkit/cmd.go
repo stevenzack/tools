@@ -13,9 +13,9 @@ func Run(program string, args ...string) (string, error) {
 	fe := new(strings.Builder)
 	c.Stderr = fe
 	c.Stdout = fo
-	c.Run()
+	e := c.Run()
 	if c.ProcessState.ExitCode() != 0 {
-		return fo.String(), fmt.Errorf("run command [%s %s] failed: %s", program, strings.Join(args, " "), fe.String())
+		return fo.String(), fmt.Errorf("run command [%s %s] failed: %w, %s", program, strings.Join(args, " "), e, fo.String()+fe.String())
 	}
 	return fo.String() + fe.String(), nil
 }
