@@ -1,3 +1,3 @@
-module github.com/StevenZack/tools
+module github.com/stevenzack/tools
 
 go 1.15
