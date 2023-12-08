@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/StevenZack/tools/cmdToolkit"
+	"github.com/stevenzack/tools/cmdToolkit"
 )
 
 func main() {

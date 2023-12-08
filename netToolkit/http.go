@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/StevenZack/tools/strToolkit"
+	"github.com/stevenzack/tools/strToolkit"
 )
 
 func DownloadWithProgress(url, dst string, onPro func(offset, total int64)) error {

@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/StevenZack/tools/strToolkit"
+	"github.com/stevenzack/tools/strToolkit"
 )
 
 // GetRAMSize returns total RAM size in bytes

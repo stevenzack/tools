@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/StevenZack/tools/strToolkit"
+	"github.com/stevenzack/tools/strToolkit"
 )
 
 func Tailn1(path string) (string, int64, error) {

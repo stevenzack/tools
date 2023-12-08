@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/StevenZack/tools/strToolkit"
+	"github.com/stevenzack/tools/strToolkit"
 )
 
 func DoPostMultipartWithHeaders(url string, m map[string]interface{}, headers map[string]string) (string, error) {

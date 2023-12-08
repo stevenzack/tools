@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/StevenZack/tools/numToolkit"
+	"github.com/stevenzack/tools/numToolkit"
 )
 
 func SplitHans(s string) string {

@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/StevenZack/tools/strToolkit"
+	"github.com/stevenzack/tools/strToolkit"
 )
 
 func IsGoPathPkg(pkgPath string) bool {

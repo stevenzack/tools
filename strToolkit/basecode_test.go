@@ -3,7 +3,7 @@ package strToolkit
 import (
 	"testing"
 
-	"github.com/StevenZack/tools/numToolkit"
+	"github.com/stevenzack/tools/numToolkit"
 )
 
 func TestBaseDecode(t *testing.T) {
